@@ -27,6 +27,10 @@ public class Vector2D {
         this(0, 0);
     }
 
+    public Vector2D(Point2D p) {
+        this(p.getX(), p.getY());
+    }
+
     public double getMagnitude() {
         return magnitude;
     }
@@ -49,5 +53,9 @@ public class Vector2D {
 
     public double distance(Vector2D other) {
         return Math.sqrt((other.getX() - x) * (other.getX() - x) + (other.getY() - y) * (other.getY() - y));
+    }
+
+    public void print() {
+        System.out.println(x + " " + y);
     }
 }

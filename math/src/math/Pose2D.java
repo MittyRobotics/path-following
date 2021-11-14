@@ -36,4 +36,8 @@ public class Pose2D {
     public double getAngle() {
         return rotation;
     }
+
+    public void print() {
+        System.out.println(position.getX() + " " + position.getY() + " " + rotation);
+    }
 }
