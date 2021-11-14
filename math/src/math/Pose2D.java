@@ -1,12 +1,12 @@
 package math;
 
 public class Pose2D {
-    public Vector2D position;
-    public Angle angle;
+    private Vector2D position;
+    private Angle angle;
 
-    public double x;
-    public double y;
-    public double rotation;
+    private double x;
+    private double y;
+    private double rotation;
 
     public Pose2D(Vector2D position, Angle angle) {
         this.angle = angle;
@@ -23,5 +23,17 @@ public class Pose2D {
 
         this.position = new Vector2D(x, y);
         this.angle = new Angle(angle);
+    }
+
+    public double distance(Pose2D other) {
+        return other.getPosition().distance(this.position);
+    }
+
+    public Vector2D getPosition() {
+        return position;
+    }
+
+    public double getAngle() {
+        return rotation;
     }
 }
