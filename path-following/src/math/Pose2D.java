@@ -16,6 +16,14 @@ public class Pose2D {
         this.rotation = angle.getAngle();
     }
 
+    public Pose2D(Point2D position, Angle angle) {
+        this.angle = angle;
+        this.position = new Vector2D(position);
+        this.x = position.getX();
+        this.y = position.getY();
+        this.rotation = angle.getAngle();
+    }
+
     public Pose2D(double x, double y, double angle) {
         this.x = x;
         this.y = y;

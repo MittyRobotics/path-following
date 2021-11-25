@@ -32,4 +32,8 @@ public class Point2D {
     public double magnitude() {
         return Math.sqrt(x * x + y * y);
     }
+
+    public void print() {
+        System.out.println(x + " " + y);
+    }
 }

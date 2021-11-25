@@ -6,9 +6,9 @@ import math.Pose2D;
 import math.Vector2D;
 
 public class QuinticHermiteSpline {
-    public Pose2D pose0, pose1;
-    public Vector2D velocity0, velocity1;
-    public Vector2D acceleration0, acceleration1;
+    private Pose2D pose0, pose1;
+    private Vector2D velocity0, velocity1;
+    private Vector2D acceleration0, acceleration1;
 
     public QuinticHermiteSpline(Pose2D pose0, Pose2D pose1, Vector2D velocity0, Vector2D velocity1,
                                 Vector2D acceleration0, Vector2D acceleration1) {
@@ -19,12 +19,12 @@ public class QuinticHermiteSpline {
         this.acceleration0 = acceleration0;
         this.acceleration1 = acceleration1;
 
-        pose0.print();
+        /*pose0.print();
         pose1.print();
         velocity0.print();
         velocity1.print();
         acceleration0.print();
-        acceleration1.print();
+        acceleration1.print();*/
 
     }
 
@@ -62,6 +62,14 @@ public class QuinticHermiteSpline {
         } else {
             return new Point2D(pose1.getPosition());
         }
+    }
+
+    public Angle getAngle(double t) {
+        return new Angle(getDerivative(t, 1));
+    }
+
+    public Pose2D getPose(double t) {
+        return new Pose2D(getPoint(t), getAngle(t));
     }
 
     public Point2D getDerivative(double t, int n) {

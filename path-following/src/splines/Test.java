@@ -19,8 +19,6 @@ public class Test {
         }
         System.out.println();
 
-        for(double i = 0; i <= 1.0; i+=0.01) {
-            System.out.print("(" + df.format(spline.getDerivative(i, 1).getX()) + ", " + df.format(spline.getDerivative(i, 1).getY()) + "),");
-        }
+        System.out.println(spline.getPose(0.5).getAngle());
     }
 }

@@ -11,6 +11,10 @@ public class Angle {
         this.radians = radians;
     }
 
+    public Angle(Point2D point) {
+        this(point.getX(), point.getY());
+    }
+
     public double tan() {
         return Math.tan(radians);
     }
@@ -25,5 +29,9 @@ public class Angle {
 
     public double getAngle() {
         return radians;
+    }
+
+    public void print() {
+        System.out.println(radians + " Radians");
     }
 }
