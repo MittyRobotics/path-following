@@ -3,7 +3,9 @@ package path;
 public class DifferentialDriveState {
     private double linearVelocity, angularVelocity, leftVelocity, rightVelocity, radius, trackWidth;
 
-    public DifferentialDriveState() {}
+    public DifferentialDriveState(double trackWidth) {
+        this.trackWidth = trackWidth;
+    }
 
     public DifferentialDriveState(double linearVelocity, double angularVelocity, double leftVelocity, double rightVelocity, double radius, double trackWidth) {
         this.linearVelocity = linearVelocity;

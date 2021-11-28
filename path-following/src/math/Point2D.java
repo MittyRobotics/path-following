@@ -34,6 +34,6 @@ public class Point2D {
     }
 
     public void print() {
-        System.out.println(x + " " + y);
+        System.out.println("(" + x + ", " + y + ")");
     }
 }

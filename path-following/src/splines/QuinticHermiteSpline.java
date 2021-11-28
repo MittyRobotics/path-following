@@ -52,9 +52,9 @@ public class QuinticHermiteSpline extends Parametric {
             return getPointFromCoefficients(h0, h1, h2, h3, h4, h5);
 
         } else if (t < 0) {
-            return new Point2D(pose0.getPosition());
+            return pose0.getPosition();
         } else {
-            return new Point2D(pose1.getPosition());
+            return pose1.getPosition();
         }
     }
 

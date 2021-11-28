@@ -1,6 +1,6 @@
 package splines;
 
-import math.Pose2D;
+import math.*;
 
 import java.text.DecimalFormat;
 
@@ -8,7 +8,7 @@ public class Test {
     public static void main(String[] args) {
         QuinticHermiteSpline spline = new QuinticHermiteSpline(
                 new Pose2D(0, 0, 0),
-                new Pose2D(100, 50, -1)
+                new Pose2D(0, 50, 0)
         );
 
         DecimalFormat df = new DecimalFormat("#");
@@ -25,5 +25,13 @@ public class Test {
             + " | error=" + (actualLength - spline.getGaussianQuadratureLength(0., 1., i)) + " | percenterror = " +
                     df.format((actualLength - spline.getGaussianQuadratureLength(0., 1., i))/actualLength));
         }*/
+
+        Pose2D pose = new Pose2D(new Point2D(0, 0), new Angle(0));
+        Point2D other = new Point2D(2, -1);
+
+        Circle circle = new Circle();
+        circle.fromTangentAndPoint(pose, other);
+
+        circle.print();
     }
 }

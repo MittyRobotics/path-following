@@ -316,7 +316,7 @@ public class Parametric {
         return getGaussianQuadratureLength(0, end, steps);
     }
 
-    //use 11 steps for ~ 0.001% error, 17 for ~0.0001%, oscillates between 11 and 17 so do not use
+    //use 11 or 17 steps, does not matter much because error is small unless the curvature is very high
     public double getGaussianQuadratureLength(int steps) {
         return getGaussianQuadratureLength(1.0, steps);
     }

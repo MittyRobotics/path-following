@@ -1,7 +1,7 @@
 package math;
 
 public class Pose2D {
-    private Vector2D position;
+    private Point2D position;
     private Angle angle;
 
     private double x;
@@ -14,7 +14,7 @@ public class Pose2D {
 
     public Pose2D(Vector2D position, Angle angle) {
         this.angle = angle;
-        this.position = position;
+        this.position = new Point2D(position);
         this.x = position.getX();
         this.y = position.getY();
         this.rotation = angle.getAngle();
@@ -22,7 +22,7 @@ public class Pose2D {
 
     public Pose2D(Point2D position, Angle angle) {
         this.angle = angle;
-        this.position = new Vector2D(position);
+        this.position = position;
         this.x = position.getX();
         this.y = position.getY();
         this.rotation = angle.getAngle();
@@ -33,7 +33,7 @@ public class Pose2D {
         this.y = y;
         this.rotation = angle;
 
-        this.position = new Vector2D(x, y);
+        this.position = new Point2D(x, y);
         this.angle = new Angle(angle);
     }
 
@@ -41,7 +41,7 @@ public class Pose2D {
         return other.getPosition().distance(this.position);
     }
 
-    public Vector2D getPosition() {
+    public Point2D getPosition() {
         return position;
     }
 
@@ -50,6 +50,6 @@ public class Pose2D {
     }
 
     public void print() {
-        System.out.println(position.getX() + " " + position.getY() + " " + rotation);
+        System.out.println("(" + position.getX() + ", " + position.getY() + ", " + rotation + " rad)");
     }
 }
