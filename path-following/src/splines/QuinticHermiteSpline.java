@@ -80,6 +80,15 @@ public class QuinticHermiteSpline extends Parametric {
                 double h5 = 30 * t * t * t * t - 60 * t * t * t + 30 * t * t;
 
                 return getPointFromCoefficients(h0, h1, h2, h3, h4, h5);
+            case 2:
+                h0 = -120 * t * t * t + 180 * t * t - 60 * t;
+                h1 = -60 * t * t * t + 96 * t * t - 36 * t;
+                h2 = -10 * t * t * t + 18 * t * t - 9 * t + 1;
+                h3 = t * (10 * t * t - 12 * t + 3);
+                h4 = -60 * t * t * t + 84 * t * t - 24 * t;
+                h5 = 120 * t * t * t - 180 * t * t + 60 * t;
+
+                return getPointFromCoefficients(h0, h1, h2, h3, h4, h5);
             default:
                 return new Point2D(0, 0);
         }
