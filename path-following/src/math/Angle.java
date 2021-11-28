@@ -3,6 +3,10 @@ package math;
 public class Angle {
     private double radians;
 
+    public Angle() {
+        this(0);
+    }
+
     public Angle(double x, double y) {
         radians = Math.atan2(y, x);
     }

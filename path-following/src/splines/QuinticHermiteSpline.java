@@ -5,7 +5,7 @@ import math.Point2D;
 import math.Pose2D;
 import math.Vector2D;
 
-public class QuinticHermiteSpline {
+public class QuinticHermiteSpline extends Parametric {
     private Pose2D pose0, pose1;
     private Vector2D velocity0, velocity1;
     private Vector2D acceleration0, acceleration1;
@@ -18,13 +18,6 @@ public class QuinticHermiteSpline {
         this.velocity1 = velocity1;
         this.acceleration0 = acceleration0;
         this.acceleration1 = acceleration1;
-
-        /*pose0.print();
-        pose1.print();
-        velocity0.print();
-        velocity1.print();
-        acceleration0.print();
-        acceleration1.print();*/
 
     }
 
@@ -46,6 +39,7 @@ public class QuinticHermiteSpline {
                 getAccelerationMagnitudeFromCurvature(curvature1, pose1.distance(pose0)));
     }
 
+    @Override
     public Point2D getPoint(double t) {
         if(t >= 0 && t <= 1) {
             double h0 = -6 * t * t * t * t * t + 15 * t * t * t * t - 10 * t * t * t + 1;
@@ -64,14 +58,17 @@ public class QuinticHermiteSpline {
         }
     }
 
+    @Override
     public Angle getAngle(double t) {
         return new Angle(getDerivative(t, 1));
     }
 
+    @Override
     public Pose2D getPose(double t) {
         return new Pose2D(getPoint(t), getAngle(t));
     }
 
+    @Override
     public Point2D getDerivative(double t, int n) {
         switch(n) {
             case 1:
@@ -94,47 +91,5 @@ public class QuinticHermiteSpline {
                         h3 * acceleration1.getX() + h4 * velocity1.getX() + h5 * pose1.getPosition().getX(),
                 h0 * pose0.getPosition().getY() + h1 * velocity0.getY() + h2 * acceleration0.getY() +
                         h3 * acceleration1.getY() + h4 * velocity1.getY() + h5 * pose1.getPosition().getY());
-    }
-
-
-    public double getAccelerationMagnitudeFromCurvature(double curvature, double velocityMagnitude) {
-        //a_rad = |V|^2 / R, curvature = 1/R
-        return curvature * velocityMagnitude * velocityMagnitude;
-    }
-
-    public double getRawLength(double start, double end, double steps) {
-        double stepSize = (end - start) / steps;
-        double length = 0;
-
-        for(double i = start; i <= end; i += stepSize) {
-            length += getPoint(i).distance(getPoint(i+stepSize));
-        }
-
-        return length;
-    }
-
-
-    public double getGaussianQuadratureLength(double start, double end) {
-        double[][] coefficients = new double[][] {
-                {0.0000000000000000, 0.2729250867779006},
-                {-0.2695431559523450, 0.2628045445102467},
-                {0.2695431559523450, 0.2628045445102467},
-                {-0.5190961292068118, 0.2331937645919905},
-                {0.5190961292068118, 0.2331937645919905},
-                {-0.7301520055740494, 0.1862902109277343},
-                {0.7301520055740494, 0.1862902109277343},
-                {-0.8870625997680953, 0.1255803694649046},
-                {0.8870625997680953, 0.1255803694649046},
-                {-0.9782286581460570, 0.0556685671161737},
-                {0.9782286581460570, 0.0556685671161737}
-        };
-
-        double half = (end - start) / 2.0;
-        double avg = (start + end) / 2.0;
-        double length = 0;
-        for (int i = 0; i < 11; i++) {
-            length += getDerivative(avg + half * coefficients[i][0], 1).magnitude() * coefficients[i][1];
-        }
-        return length * half;
     }
 }

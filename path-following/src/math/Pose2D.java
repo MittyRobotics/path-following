@@ -8,6 +8,10 @@ public class Pose2D {
     private double y;
     private double rotation;
 
+    public Pose2D() {
+        this(new Point2D(), new Angle());
+    }
+
     public Pose2D(Vector2D position, Angle angle) {
         this.angle = angle;
         this.position = position;
