@@ -1,4 +1,5 @@
-package splines;
+package path;
 
 public class Path {
+
 }

@@ -8,7 +8,7 @@ public class Test {
     public static void main(String[] args) {
         QuinticHermiteSpline spline = new QuinticHermiteSpline(
                 new Pose2D(0, 0, 0),
-                new Pose2D(100, 50, 1.57)
+                new Pose2D(0, 50, 0)
         );
 
         DecimalFormat df = new DecimalFormat("#");
@@ -19,6 +19,7 @@ public class Test {
         }
         System.out.println();
 
-        System.out.println(spline.getPose(0.5).getAngle());
+        System.out.println(spline.getRawLength(0., 1., 10000));
+        System.out.println(spline.getGaussianQuadratureLength(0., 1.));
     }
 }
