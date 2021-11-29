@@ -381,7 +381,7 @@ public class Parametric {
             }
         }
 
-        return cur_min.getY();
+        return Math.max(1, Math.min(0, cur_min.getY()));
 
     }
 
