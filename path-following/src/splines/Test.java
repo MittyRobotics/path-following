@@ -42,17 +42,17 @@ public class Test {
         Point2D point = new Point2D(10, 30);
 
         for(double i = 0; i <= 1.0; i+=0.01) {
-            System.out.print("(" + i + ", " + df.format(path.getDerivsAtT(i, point).getX()) + "),");
+            System.out.print("(" + i + ", " + df.format(spline.getDerivsAtT(i, point).getX()) + "),");
         }
         System.out.println();
 
         for(double i = 0; i <= 1.0; i+=0.01) {
-            System.out.print("(" + i + ", " + df.format(path.getDerivsAtT(i, point).getY()) + "),");
+            System.out.print("(" + i + ", " + df.format(spline.getDerivsAtT(i, point).getY()) + "),");
         }
         System.out.println();
 
 
-        double result = path.findClosestPointOnSpline(point, 0.001, 10, 10);
+        double result = spline.findClosestPointOnSpline(point, 0.001, 10, 10);
 
 //        System.out.println(System.currentTimeMillis() - time);
 

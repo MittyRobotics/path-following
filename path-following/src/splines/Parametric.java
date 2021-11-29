@@ -3,6 +3,7 @@ package splines;
 import math.Angle;
 import math.Point2D;
 import math.Pose2D;
+import math.Vector2D;
 
 public class Parametric {
     public Point2D getPoint(double t) {
@@ -326,6 +327,14 @@ public class Parametric {
         return curvature * velocityMagnitude * velocityMagnitude;
     }
 
+    public double getCurvature(double t) {
+        Point2D d1 = getDerivative(t, 1);
+        Point2D d2 = getDerivative(t, 2);
+
+        //https://en.wikipedia.org/wiki/Curvature#In_terms_of_a_general_parametrization
+        return (d1.getX() * d2.getY() - d2.getX() * d1.getY()) / Math.pow(d1.getX()*d1.getX() + d1.getY()*d1.getY(), 1.5);
+    }
+
     public double getRawLength(double start, double end, double steps) {
         double stepSize = (end - start) / steps;
         double length = 0;
@@ -335,6 +344,61 @@ public class Parametric {
         }
 
         return length;
+    }
+
+
+    //get closest point using Newton's method on each of several initial points defined by steps, goes through a certain number of iterations or until threshold is reached
+    public double findClosestPointOnSpline(Point2D point, double threshold, int steps, int iterations) {
+
+        Vector2D cur_min = new Vector2D(Double.POSITIVE_INFINITY, 0);
+
+        for(double i = 0; i <= 1; i += 1./steps) {
+            double cur_t = i;
+            Vector2D derivs = getDerivsAtT(cur_t, point);
+            double dt = derivs.getX() / derivs.getY();
+
+            int counter = 0;
+
+            while(Math.abs(dt) >= threshold && counter < iterations) {
+                cur_t -= dt;
+                derivs = getDerivsAtT(cur_t, point);
+                dt = derivs.getX() / derivs.getY();
+                counter++;
+            }
+
+            if(counter < iterations) {
+                double cur_d = getDistanceAtT(cur_t, point);
+
+                if(cur_d < cur_min.getX()) {
+                    cur_min = new Vector2D(cur_d, cur_t);
+                }
+            }
+        }
+
+        return cur_min.getY();
+
+    }
+
+    //first and second derivative of distance from point to spline at that t
+    public Vector2D getDerivsAtT(double t, Point2D point) {
+        Point2D p = getPoint(t);
+        Point2D d1 = getDerivative(t, 1);
+        Point2D d2 = getDerivative(t, 2);
+
+        double x_a = p.getX() - point.getX();
+        double y_b = p.getY() - point.getY();
+
+        return new Vector2D(
+                2*(x_a*d1.getX() + y_b*d1.getY()),
+                2*(d1.getX() * d1.getX() + x_a*d2.getX() + d1.getY() * d1.getY() + y_b * d2.getY())
+        );
+    }
+
+    //distance from point to spline at that t
+    public double getDistanceAtT(double t, Point2D point) {
+        Point2D p = getPoint(t);
+        return (p.getX() - point.getX())*(p.getX() - point.getX()) +
+                (p.getY() - point.getY())*(p.getY() - point.getY());
     }
 
 }

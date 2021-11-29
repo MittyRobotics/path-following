@@ -1,21 +1,27 @@
 package path;
 
 import math.Point2D;
+import math.Pose2D;
 import math.Vector2D;
 import splines.Parametric;
 
 public class Path {
     private Parametric parametric;
-    private double maxAcceleration, maxVelocity, startVelocity, endVelocity, maxDeceleration, maxAngularAcceleration, totalDistance, traveledDistance;
+    private double maxAcceleration, maxVelocity, startVelocity, endVelocity, maxDeceleration, maxAngularVelocity, totalDistance;
 
-    public Path(Parametric parametric, double maxAcceleration, double maxDeceleration, double maxVelocity, double maxAngularAcceleration, double startVelocity, double endVelocity) {
+    private Pose2D prevRobotPosition;
+    private double prevVelocity;
+
+    public Path(Parametric parametric, double maxAcceleration, double maxDeceleration, double maxVelocity, double maxAngularVelocity, double startVelocity, double endVelocity) {
         this.parametric = parametric;
         this.maxAcceleration = maxAcceleration;
         this.maxDeceleration = maxDeceleration;
         this.maxVelocity = maxVelocity;
-        this.maxAngularAcceleration = maxAngularAcceleration;
+        this.maxAngularVelocity = maxAngularVelocity;
         this.startVelocity = 0;
         this.endVelocity = 0;
+
+        totalDistance = parametric.getGaussianQuadratureLength(11);
     }
 
     public Path(Parametric parametric, double maxAcceleration, double maxVelocity, double startVelocity, double endVelocity) {
@@ -26,55 +32,45 @@ public class Path {
         this(parametric, maxAcceleration, maxVelocity, 0, 0);
     }
 
-    public double findClosestPointOnSpline(Point2D point, double threshold, int steps, int iterations) {
+    public DifferentialDriveState update(Pose2D robotPosition, double dt, double lookahead, double trackwidth) {
+        double closestPointT = parametric.findClosestPointOnSpline(robotPosition.getPosition(), 0.01, 10, 10);
 
-        Vector2D cur_min = new Vector2D(Double.POSITIVE_INFINITY, 0);
+        double lookaheadT = closestPointT + lookahead;
 
-        for(double i = 0; i <= 1; i += 1./steps) {
-            double cur_t = i;
-            Vector2D derivs = getDerivsAtT(cur_t, point);
-            double dt = derivs.getX() / derivs.getY();
+        Point2D lookaheadPoint = parametric.getPoint(lookaheadT);
 
-            int counter = 0;
+        double distanceToEnd = parametric.getGaussianQuadratureLength(closestPointT, 1.0, 11);
 
-            while(Math.abs(dt) >= threshold && counter < iterations) {
-                cur_t -= dt;
-                derivs = getDerivsAtT(cur_t, point);
-                dt = derivs.getX() / derivs.getY();
-                counter++;
-            }
+        double maxVelocityToEnd = maxVelocityFromDistance(distanceToEnd, endVelocity, maxDeceleration);
 
-            if(counter < iterations) {
-                double cur_d = getDistanceAtT(cur_t, point);
+        double velocity = Math.min(Math.min(prevVelocity + maxAcceleration * dt, maxVelocityToEnd), maxVelocity);
 
-                if(cur_d < cur_min.getX()) {
-                    cur_min = new Vector2D(cur_d, cur_t);
-                }
-            }
+        double curvature = parametric.getCurvature(closestPointT);
+        double maxCurvatureVelocity = maxVelocityFromCurvature(curvature);
+        
+        if(Math.abs(velocity - maxCurvatureVelocity) < maxDeceleration) {
+            velocity = Math.min(velocity, maxCurvatureVelocity);
         }
 
-        return cur_min.getY();
+        prevRobotPosition = robotPosition;
+        prevVelocity = velocity;
 
+        return PurePursuitController.purePursuit(robotPosition, lookaheadPoint, velocity, trackwidth);
     }
 
-    public Vector2D getDerivsAtT(double t, Point2D point) {
-        Point2D p = parametric.getPoint(t);
-        Point2D d1 = parametric.getDerivative(t, 1);
-        Point2D d2 = parametric.getDerivative(t, 2);
-
-        double x_a = p.getX() - point.getX();
-        double y_b = p.getY() - point.getY();
-
-        return new Vector2D(
-                2*(x_a*d1.getX() + y_b*d1.getY()),
-                2*(d1.getX() * d1.getX() + x_a*d2.getX() + d1.getY() * d1.getY() + y_b * d2.getY())
-        );
+    public double maxVelocityFromDistance(double distance, double endVelocity, double maxDeceleration) {
+        //vf^2 = vi^2 + 2ad, solve for vi (deceleration = -a)
+        if(distance > 0) return Math.sqrt(endVelocity * endVelocity + 2 * maxDeceleration * distance);
+        else return 0;
     }
 
-    public double getDistanceAtT(double t, Point2D point) {
-        Point2D p = parametric.getPoint(t);
-        return (p.getX() - point.getX())*(p.getX() - point.getX()) +
-                (p.getY() - point.getY())*(p.getY() - point.getY());
+    public double maxVelocityFromCurvature(double curvature) {
+        return curvature * maxAngularVelocity;
+    }
+
+    public double minDistanceToSlowdown(double curVelocity, double endVelocity, double maxDeceleration) {
+        //vf^2 = vi^2 + 2ad, solve for d (deceleration = -a)
+        return (curVelocity * curVelocity - endVelocity * endVelocity) / (2 * maxDeceleration);
     }
 
 }
