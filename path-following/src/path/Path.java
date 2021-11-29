@@ -46,8 +46,8 @@ public class Path {
         double velocity = Math.min(Math.min(prevVelocity + maxAcceleration * dt, maxVelocityToEnd), maxVelocity);
 
         double maxCurvatureVelocity = maxVelocityFromCurvature(parametric.getCurvature(closestPointT));
-        velocity = Math.min(velocity, maxCurvatureVelocity);
 
+        velocity = Math.min(velocity, maxCurvatureVelocity);
 
         prevVelocity = velocity;
 
@@ -61,11 +61,12 @@ public class Path {
     }
 
     public double maxVelocityFromCurvature(double curvature) {
-        return curvature * maxAngularVelocity;
+        if(Double.isInfinite(maxAngularVelocity)) return Double.POSITIVE_INFINITY;
+        else return curvature * maxAngularVelocity;
     }
 
-    public boolean isFinished(double threshold) {
-        return (parametric.getLength() - distanceTraveled) < threshold;
+    public boolean isFinished(Pose2D robotPosition, double threshold) {
+        return robotPosition.getPosition().distance(parametric.getPoint(1.0)) <= threshold;
     }
 
 }

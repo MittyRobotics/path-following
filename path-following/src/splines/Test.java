@@ -1,6 +1,7 @@
 package splines;
 
 import math.*;
+import path.DifferentialDriveState;
 import path.Path;
 
 import java.text.DecimalFormat;
@@ -37,26 +38,11 @@ public class Test {
 
 //        long time = System.currentTimeMillis();
 
-        Path path = new Path(spline, 0, 0);
+        Path path = new Path(spline, 30, 30);
 
-        Point2D point = new Point2D(10, 30);
+        DifferentialDriveState dds = path.update(new Pose2D(new Point2D(1, 0), new Angle(0.1)), 0.02, 0.05,20);
+        System.out.println(dds.getLeftVelocity() + " " + dds.getRightVelocity());
 
-        for(double i = 0; i <= 1.0; i+=0.01) {
-            System.out.print("(" + i + ", " + df.format(spline.getDerivsAtT(i, point).getX()) + "),");
-        }
-        System.out.println();
-
-        for(double i = 0; i <= 1.0; i+=0.01) {
-            System.out.print("(" + i + ", " + df.format(spline.getDerivsAtT(i, point).getY()) + "),");
-        }
-        System.out.println();
-
-
-        double result = spline.findClosestPointOnSpline(point, 0.001, 10, 10);
-
-//        System.out.println(System.currentTimeMillis() - time);
-
-        spline.getPoint(result).print();
 
     }
 }
