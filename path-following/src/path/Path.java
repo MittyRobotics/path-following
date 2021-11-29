@@ -35,7 +35,7 @@ public class Path {
         distanceTraveled = parametric.getGaussianQuadratureLength(closestPointT, 11);
 
 
-        double lookaheadT = Math.max(closestPointT + lookahead, 1.0);
+        double lookaheadT = Math.min(closestPointT + lookahead, 1.0);
         Point2D lookaheadPoint = parametric.getPoint(lookaheadT);
 
 
