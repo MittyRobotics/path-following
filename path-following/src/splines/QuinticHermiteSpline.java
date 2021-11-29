@@ -19,6 +19,8 @@ public class QuinticHermiteSpline extends Parametric {
         this.acceleration0 = acceleration0;
         this.acceleration1 = acceleration1;
 
+        this.length = getGaussianQuadratureLength(11);
+
     }
 
     public QuinticHermiteSpline(Pose2D pose0, Pose2D pose1, Vector2D velocity0, Vector2D velocity1) {

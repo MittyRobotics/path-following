@@ -6,12 +6,18 @@ import math.Pose2D;
 import math.Vector2D;
 
 public class Parametric {
+    protected double length;
+
     public Point2D getPoint(double t) {
         return new Point2D();
     }
 
     public Angle getAngle(double t) {
         return new Angle();
+    }
+
+    public double getLength() {
+        return length;
     }
 
     public Pose2D getPose(double t) {
@@ -399,6 +405,20 @@ public class Parametric {
         Point2D p = getPoint(t);
         return (p.getX() - point.getX())*(p.getX() - point.getX()) +
                 (p.getY() - point.getY())*(p.getY() - point.getY());
+    }
+
+    public double getTFromLength(double length) {
+        double t = length / this.length;
+
+        for(int i = 0; i < 5; i++) {
+            double tangentMagnitude = getDerivative(t, 1).magnitude();
+            if(tangentMagnitude > 0.0) {
+                t -= (getGaussianQuadratureLength(t, 11) - length) / tangentMagnitude;
+                t = Math.min(1, Math.max(t, 0));
+            }
+        }
+
+        return t;
     }
 
 }
