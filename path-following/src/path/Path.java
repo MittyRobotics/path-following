@@ -1,5 +1,6 @@
 package path;
 
+import math.Circle;
 import math.Point2D;
 import math.Pose2D;
 import splines.Parametric;
@@ -30,8 +31,8 @@ public class Path {
         this(parametric, maxAcceleration, maxVelocity, 0, 0);
     }
 
-    public DifferentialDriveState update(Pose2D robotPosition, double dt, double lookahead, double trackwidth) {
-        double closestPointT = parametric.findClosestPointOnSpline(robotPosition.getPosition(), 0.01, 10, 10);
+    public DifferentialDriveState update(Pose2D robotPose, double dt, double lookahead, double trackwidth) {
+        double closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), 0.01, 10, 10);
         distanceTraveled = parametric.getGaussianQuadratureLength(closestPointT, 11);
 
 
@@ -45,13 +46,18 @@ public class Path {
 
         double velocity = Math.min(Math.min(prevVelocity + maxAcceleration * dt, maxVelocityToEnd), maxVelocity);
 
-        double maxCurvatureVelocity = maxVelocityFromCurvature(parametric.getCurvature(closestPointT));
+//        double maxCurvatureVelocity = maxVelocityFromCurvature(parametric.getCurvature(closestPointT));
+        Circle tangentCircle = new Circle();
+        tangentCircle.updateFromPoseAndPoint(robotPose, lookaheadPoint);
+        double purePursuitRadius = tangentCircle.getRadius();
+
+        double maxCurvatureVelocity = maxVelocityFromCurvature(1/purePursuitRadius);
 
         velocity = Math.min(velocity, maxCurvatureVelocity);
 
         prevVelocity = velocity;
 
-        return PurePursuitController.purePursuit(robotPosition, lookaheadPoint, velocity, trackwidth);
+        return PurePursuitController.purePursuit(purePursuitRadius, velocity, trackwidth);
     }
 
     public double maxVelocityFromDistance(double distance, double endVelocity, double maxDeceleration) {

@@ -11,7 +11,7 @@ public class Circle {
         this.center = center;
     }
 
-    public void fromTangentAndPoint(Pose2D pose, Point2D other) {
+    public void updateFromPoseAndPoint(Pose2D pose, Point2D other) {
         Angle angleOfRadius = new Angle(pose.getAngle() - Math.PI/2);
         Line radius1 = new Line(pose.getPosition(), angleOfRadius);
 

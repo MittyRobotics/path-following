@@ -16,7 +16,7 @@ public class DifferentialDriveState {
         this.trackWidth = trackWidth;
     }
 
-    public void fromLinearAndAngular(double linearVelocity, double angularVelocity, double trackWidth) {
+    public void updateFromLinearAndAngularVelocity(double linearVelocity, double angularVelocity, double trackWidth) {
         this.linearVelocity = linearVelocity;
         this.angularVelocity = angularVelocity;
         this.trackWidth = trackWidth;
@@ -32,13 +32,13 @@ public class DifferentialDriveState {
         }
     }
 
-    public void fromLinearAndRadius(double linearVelocity, double radius, double trackWidth) {
+    public void updateFromLinearVelocityAndRadius(double linearVelocity, double radius, double trackWidth) {
         if(Double.isInfinite(radius)) {
             this.angularVelocity = 0;
         } else {
             this.angularVelocity = linearVelocity / radius;
         }
-        fromLinearAndAngular(linearVelocity, this.angularVelocity, trackWidth);
+        updateFromLinearAndAngularVelocity(linearVelocity, this.angularVelocity, trackWidth);
     }
 
     public double getLeftVelocity() {
