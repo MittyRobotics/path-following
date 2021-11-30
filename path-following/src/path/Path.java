@@ -46,14 +46,18 @@ public class Path {
 
         double velocity = Math.min(Math.min(prevVelocity + maxAcceleration * dt, maxVelocityToEnd), maxVelocity);
 
+
 //        double maxCurvatureVelocity = maxVelocityFromCurvature(parametric.getCurvature(closestPointT));
         Circle tangentCircle = new Circle();
         tangentCircle.updateFromPoseAndPoint(robotPose, lookaheadPoint);
         double purePursuitRadius = tangentCircle.getRadius();
 
-        double maxCurvatureVelocity = maxVelocityFromCurvature(1/purePursuitRadius);
 
-        velocity = Math.min(velocity, maxCurvatureVelocity);
+        if(Double.isFinite(purePursuitRadius)) {
+            double maxCurvatureVelocity = maxVelocityFromCurvature(1 / purePursuitRadius);
+            velocity = Math.min(velocity, maxCurvatureVelocity);
+        }
+
 
         prevVelocity = velocity;
 
