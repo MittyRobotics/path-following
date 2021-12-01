@@ -18,8 +18,8 @@ public class Path {
         this.maxDeceleration = maxDeceleration;
         this.maxVelocity = maxVelocity;
         this.maxAngularVelocity = maxAngularVelocity;
-        this.startVelocity = 0;
-        this.endVelocity = 0;
+        this.startVelocity = startVelocity;
+        this.endVelocity = endVelocity;
 
         this.prevVelocity = startVelocity;
     }
