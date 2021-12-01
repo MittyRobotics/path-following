@@ -43,5 +43,24 @@ public class Test {
         DifferentialDriveState dds = path.update(new Pose2D(new Point2D(1, 0), new Angle(0.1)), 0.02, 0.05,20);
         System.out.println(dds.getLeftVelocity() + " " + dds.getRightVelocity());*/
 
+
+        QuinticHermiteSpline spline = new QuinticHermiteSpline(
+                new Pose2D(0, 0, 0),
+                new Pose2D(2.54, 1.72, 0)
+        );
+
+        DecimalFormat df = new DecimalFormat();
+        df.setMaximumFractionDigits(4);
+        df.setMinimumFractionDigits(4);
+
+        for(double t = 0; t <= 1; t+=0.01) {
+            Point2D point = spline.getPoint(t);
+            System.out.print("(" + df.format(point.getX()) + ", " + df.format(point.getY()) + "), ");
+        }
+
+        Path path = new Path(spline, 50, 50);
+
+        path.update(new Pose2D(1.754, 1.483, 0.5), 0.2, 0.254, 25);
+//        DifferentialDriveState dds = path.update(new Pose2D(new Point2D(1, 0), new Angle(0.1)), 0.02, 0.05,20);
     }
 }

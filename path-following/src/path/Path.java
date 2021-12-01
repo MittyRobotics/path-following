@@ -3,7 +3,7 @@ package path;
 import math.Circle;
 import math.Point2D;
 import math.Pose2D;
-import splines.Parametric;
+import splines.*;
 
 public class Path {
     private Parametric parametric;
@@ -35,9 +35,7 @@ public class Path {
         double closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), 0.01, 10, 10);
         distanceTraveled = parametric.getGaussianQuadratureLength(closestPointT, 11);
 
-
-        double lookaheadT = Math.min(closestPointT + lookahead, 1.0);
-        Point2D lookaheadPoint = parametric.getPoint(lookaheadT);
+        Point2D lookaheadPoint = parametric.getPoint(parametric.getTFromLength(distanceTraveled + lookahead));
 
 
         double distanceToEnd = parametric.getLength() - distanceTraveled;
@@ -58,6 +56,11 @@ public class Path {
             velocity = Math.min(velocity, maxCurvatureVelocity);
         }
 
+        System.out.print("Pos: ");
+        robotPose.getPosition().print();
+
+        System.out.print("Goal: ");
+        lookaheadPoint.print();
 
         prevVelocity = velocity;
 
