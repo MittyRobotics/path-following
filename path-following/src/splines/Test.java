@@ -57,10 +57,10 @@ public class Test {
             Point2D point = spline.getPoint(t);
             System.out.print("(" + df.format(point.getX()) + ", " + df.format(point.getY()) + "), ");
         }
-
+        System.out.println();
         Path path = new Path(spline, 50, 50);
 
-        path.update(new Pose2D(1.754, 1.483, 0.5), 0.2, 0.254, 25);
+        path.update(new Pose2D(2.4787, 1.7199, 0.5), 0.2, 0.254, 25);
 //        DifferentialDriveState dds = path.update(new Pose2D(new Point2D(1, 0), new Angle(0.1)), 0.02, 0.05,20);
     }
 }
