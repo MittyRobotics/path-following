@@ -8,7 +8,7 @@ import splines.*;
 
 public class Path {
     private Parametric parametric;
-    private double maxAcceleration, maxVelocity, startVelocity, endVelocity, maxDeceleration, maxAngularVelocity;
+    private double maxAcceleration, maxVelocity, endVelocity, maxDeceleration, maxAngularVelocity;
 
     private double prevVelocity, distanceTraveled;
 
@@ -18,7 +18,6 @@ public class Path {
         this.maxDeceleration = maxDeceleration;
         this.maxVelocity = maxVelocity;
         this.maxAngularVelocity = maxAngularVelocity;
-        this.startVelocity = startVelocity;
         this.endVelocity = endVelocity;
 
         this.prevVelocity = startVelocity;
@@ -38,6 +37,7 @@ public class Path {
 
         Point2D lookaheadPoint = getLookahead(distanceTraveled, lookahead);
 
+        parametric.getPoint(closestPointT).print();
 
         double distanceToEnd = parametric.getLength() - distanceTraveled;
         double maxVelocityToEnd = maxVelocityFromDistance(distanceToEnd, endVelocity, maxDeceleration);
@@ -50,7 +50,7 @@ public class Path {
         Circle tangentCircle = new Circle();
         tangentCircle.updateFromPoseAndPoint(robotPose, lookaheadPoint);
         double purePursuitRadius = tangentCircle.getRadius();
-
+        boolean turnRight = (tangentCircle.orientationOfPoseAndPoint(robotPose, lookaheadPoint) == 1);
 
         if(Double.isFinite(purePursuitRadius)) {
             double maxCurvatureVelocity = maxVelocityFromCurvature(1 / purePursuitRadius);
@@ -63,9 +63,11 @@ public class Path {
         System.out.print("Goal: ");
         lookaheadPoint.print();
 
+        System.out.println(turnRight);
+
         prevVelocity = velocity;
 
-        return PurePursuitController.purePursuit(purePursuitRadius, velocity, trackwidth);
+        return PurePursuitController.purePursuit(purePursuitRadius, velocity, turnRight, trackwidth);
     }
 
     public double maxVelocityFromDistance(double distance, double endVelocity, double maxDeceleration) {

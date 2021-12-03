@@ -60,7 +60,7 @@ public class Test {
         System.out.println();
         Path path = new Path(spline, 50, 50);
 
-        path.update(new Pose2D(2.4787, 1.7199, 0.5), 0.2, 0.254, 25);
-//        DifferentialDriveState dds = path.update(new Pose2D(new Point2D(1, 0), new Angle(0.1)), 0.02, 0.05,20);
+        path.update(new Pose2D(0.5, 0.07, 0.1), 0.2, 0.5, 25);
+
     }
 }

@@ -45,8 +45,12 @@ public class Pose2D {
         return position;
     }
 
-    public double getAngle() {
+    public double getAngleRadians() {
         return rotation;
+    }
+
+    public Angle getAngle() {
+        return angle;
     }
 
     public void print() {

@@ -29,15 +29,15 @@ public class QuinticHermiteSpline extends Parametric {
 
     public QuinticHermiteSpline(Pose2D pose0, Pose2D pose1) {
         this(pose0, pose1,
-                new Vector2D(new Angle(pose0.getAngle()), pose0.distance(pose1)),
-                new Vector2D(new Angle(pose1.getAngle()), pose1.distance(pose0)));
+                new Vector2D(new Angle(pose0.getAngleRadians()), pose0.distance(pose1)),
+                new Vector2D(new Angle(pose1.getAngleRadians()), pose1.distance(pose0)));
     }
 
     public QuinticHermiteSpline(Pose2D pose0, Pose2D pose1, double curvature0, double curvature1) {
         this(pose0, pose1);
-        this.acceleration0 = new Vector2D(new Angle(pose0.getAngle()),
+        this.acceleration0 = new Vector2D(new Angle(pose0.getAngleRadians()),
                 getAccelerationMagnitudeFromCurvature(curvature0, pose0.distance(pose1)));
-        this.acceleration1 = new Vector2D(new Angle(pose1.getAngle()),
+        this.acceleration1 = new Vector2D(new Angle(pose1.getAngleRadians()),
                 getAccelerationMagnitudeFromCurvature(curvature1, pose1.distance(pose0)));
     }
 
