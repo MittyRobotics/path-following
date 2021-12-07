@@ -1,6 +1,8 @@
 package splines;
 
-import math.*;
+import math.Angle;
+import math.Point2D;
+import math.Pose2D;
 import path.DifferentialDriveState;
 import path.Path;
 
@@ -58,9 +60,48 @@ public class Test {
             System.out.print("(" + df.format(point.getX()) + ", " + df.format(point.getY()) + "), ");
         }
         System.out.println();
-        Path path = new Path(spline, 50, 50);
+        Path path = new Path(spline, 30, 30);
 
-        path.update(new Pose2D(0.5, 0.07, 0.1), 0.2, 0.5, 25);
+        Pose2D robotPosition = new Pose2D(0, 0, 0);
+
+
+        double trackwidth = 0.635;
+
+        while(!path.isFinished(robotPosition, 0.0254)) {
+            DifferentialDriveState dds = path.update(robotPosition, 0.02, 0.25, trackwidth);
+            double left = dds.getLeftVelocity() * 0.02;
+            double right = dds.getRightVelocity() * 0.02;
+            Angle angle = robotPosition.getAngle();
+            double x = robotPosition.getPosition().getX();
+            double y = robotPosition.getPosition().getY();
+            double new_x, new_y, newAngle;
+
+            x += (Math.random()-0.5)*0.01;
+            y += (Math.random()-0.5)*0.01;
+
+            if(Math.abs(left - right) < 1e-6) {
+                new_x = x + left * angle.cos();
+                new_y = y + right * angle.sin();
+                newAngle = angle.getAngle();
+            } else {
+                double R = trackwidth * (left + right) / (2 * (right - left));
+                double wd = (right - left) / trackwidth;
+
+                new_x = x + R * Math.sin(angle.getAngle() + wd) - R * angle.sin();
+                new_y = y - R * Math.cos(angle.getAngle() + wd) + R * angle.cos();
+                newAngle = Math.toRadians(Math.toDegrees(angle.getAngle() + wd));
+            }
+
+
+            robotPosition = new Pose2D(new_x, new_y, newAngle);
+
+            robotPosition.getPosition().print();
+            robotPosition.getAngle().print();
+        }
+
+        System.out.print("Endpoint: ");
+        spline.getPoint(1.0).print();
+
 
     }
 }

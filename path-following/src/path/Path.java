@@ -4,7 +4,7 @@ import math.Angle;
 import math.Circle;
 import math.Point2D;
 import math.Pose2D;
-import splines.*;
+import splines.Parametric;
 
 public class Path {
     private Parametric parametric;
@@ -63,7 +63,7 @@ public class Path {
         System.out.print("Goal: ");
         lookaheadPoint.print();
 
-        System.out.println(turnRight);
+//        System.out.println(turnRight);
 
         prevVelocity = velocity;
 
