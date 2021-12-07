@@ -84,12 +84,11 @@ public class Test {
                 new_y = y + right * angle.sin();
                 newAngle = angle.getAngle();
             } else {
-                double R = trackwidth * (left + right) / (2 * (right - left));
-                double wd = (right - left) / trackwidth;
+                double turnRadius = trackwidth * (left + right) / (2 * (right - left));
+                newAngle = Math.toRadians(Math.toDegrees(angle.getAngle() + (right - left) / trackwidth));
 
-                new_x = x + R * Math.sin(angle.getAngle() + wd) - R * angle.sin();
-                new_y = y - R * Math.cos(angle.getAngle() + wd) + R * angle.cos();
-                newAngle = Math.toRadians(Math.toDegrees(angle.getAngle() + wd));
+                new_x = x + turnRadius * (Math.sin(newAngle) - angle.sin());
+                new_y = y - turnRadius * (Math.cos(newAngle) - angle.cos());
             }
 
 
