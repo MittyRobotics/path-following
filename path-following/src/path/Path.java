@@ -37,7 +37,7 @@ public class Path {
 
         Point2D lookaheadPoint = getLookahead(distanceTraveled, lookahead);
 
-        parametric.getPoint(closestPointT).print();
+//        parametric.getPoint(closestPointT).print();
 
         double distanceToEnd = parametric.getLength() - distanceTraveled;
         double maxVelocityToEnd = maxVelocityFromDistance(distanceToEnd, endVelocity, maxDeceleration);
@@ -57,11 +57,11 @@ public class Path {
             velocity = Math.min(velocity, maxCurvatureVelocity);
         }
 
-        System.out.print("Pos: ");
-        robotPose.getPosition().print();
-
-        System.out.print("Goal: ");
-        lookaheadPoint.print();
+//        System.out.print("Pos: ");
+//        robotPose.getPosition().print();
+//
+//        System.out.print("Goal: ");
+//        lookaheadPoint.print();
 
 //        System.out.println(turnRight);
 

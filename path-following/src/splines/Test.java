@@ -48,7 +48,7 @@ public class Test {
 
         QuinticHermiteSpline spline = new QuinticHermiteSpline(
                 new Pose2D(0, 0, 0),
-                new Pose2D(2.54, 1.72, 0)
+                new Pose2D(100 * 0.0254, 50 * 0.0254, 0)
         );
 
         DecimalFormat df = new DecimalFormat();
@@ -60,15 +60,19 @@ public class Test {
             System.out.print("(" + df.format(point.getX()) + ", " + df.format(point.getY()) + "), ");
         }
         System.out.println();
-        Path path = new Path(spline, 30, 30);
+        Path path = new Path(spline, 30 * 0.0254, 30 * 0.0254);
 
         Pose2D robotPosition = new Pose2D(0, 0, 0);
 
 
-        double trackwidth = 0.635;
+        double trackwidth = 25 * 0.0254;
 
-        while(!path.isFinished(robotPosition, 0.0254)) {
-            DifferentialDriveState dds = path.update(robotPosition, 0.02, 0.25, trackwidth);
+        double time = 0;
+
+        //http://rossum.sourceforge.net/papers/DiffSteer/
+
+        while(!path.isFinished(robotPosition, 0.0254 * 0.5)) {
+            DifferentialDriveState dds = path.update(robotPosition, 0.02, 0.0254 * 10, trackwidth);
             double left = dds.getLeftVelocity() * 0.02;
             double right = dds.getRightVelocity() * 0.02;
             Angle angle = robotPosition.getAngle();
@@ -91,15 +95,22 @@ public class Test {
                 new_y = y - turnRadius * (Math.cos(newAngle) - angle.cos());
             }
 
+            time += 0.02;
+
 
             robotPosition = new Pose2D(new_x, new_y, newAngle);
 
-            robotPosition.getPosition().print();
-            robotPosition.getAngle().print();
+            Point2D pos = robotPosition.getPosition();
+
+            System.out.print("(" + df.format(pos.getX()) + ", " + df.format(pos.getY()) + "), ");
+//            robotPosition.getAngle().print();
         }
 
-        System.out.print("Endpoint: ");
-        spline.getPoint(1.0).print();
+        System.out.println();
+        System.out.println(time);
+
+//        System.out.print("Endpoint: ");
+//        spline.getPoint(1.0).print();
 
 
     }
