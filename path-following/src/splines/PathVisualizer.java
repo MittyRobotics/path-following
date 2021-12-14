@@ -5,10 +5,14 @@ import path.DifferentialDriveState;
 import path.Path;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.lang.reflect.InvocationTargetException;
+import java.sql.Array;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import javax.swing.*;
+import javax.swing.border.Border;
 
 public class PathVisualizer {
 
@@ -19,6 +23,16 @@ public class PathVisualizer {
     private double METERS_TO_PIXELS;
     private int TITLE_HEIGHT, FRAME_HEIGHT, FRAME_WIDTH;
     private ArrayList<Pose2D> robotPoses = new ArrayList<>();
+    private ArrayList<Vector2D> velocities = new ArrayList<>();
+    private ArrayList<Double> angularVelocities = new ArrayList<>();
+    private ArrayList<Double> curvatures = new ArrayList<>();
+
+    private int cur_pos_index = 0;
+    private JFrame frame;
+    private JComponent component;
+    private JButton runSim;
+
+    boolean simulating = false;
 
     public PathVisualizer(Path path, double LOOKAHEAD, double THRESHOLD, double TRACKWIDTH, double TRACKLENGTH, double dt) {
         this.path = path;
@@ -41,32 +55,51 @@ public class PathVisualizer {
     }
 
     public void draw(Graphics2D g) {
+
+        g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+
         //draw grid
         g.setColor(Color.WHITE);
-        g.fillRect(0, 0, FRAME_WIDTH, FRAME_HEIGHT);
+        g.fillRect(0, 0, FRAME_WIDTH+400, FRAME_HEIGHT);
 
-        g.setColor(Color.LIGHT_GRAY);
-        for(double i = METERS_TO_PIXELS * 12 * Path.TO_METERS; i <= FRAME_WIDTH; i += METERS_TO_PIXELS * 12 * Path.TO_METERS) {
+        int counter = 1;
+        for(double i = METERS_TO_PIXELS * 12 * Path.TO_METERS; i <= FRAME_WIDTH/2.; i += METERS_TO_PIXELS * 12 * Path.TO_METERS) {
+            g.setColor(Color.LIGHT_GRAY);
             g.fillRect((int) (FRAME_WIDTH/2 + i - 0.5), 0, 1, FRAME_HEIGHT);
             g.fillRect((int) (FRAME_WIDTH/2 - i - 0.5), 0, 1, FRAME_HEIGHT);
+
+            g.setColor(Color.DARK_GRAY);
+            g.drawString(" " + (counter/10 == 0 ? " " : "")  + counter, (int) (FRAME_WIDTH/2 + i - 15), FRAME_HEIGHT/2+15);
+            g.drawString((counter/10 == 0 ? " " : "") + "-" + counter, (int) (FRAME_WIDTH/2 - i - 15), FRAME_HEIGHT/2+15);
+
+            counter++;
         }
 
-        for(double i = METERS_TO_PIXELS * 12 * Path.TO_METERS; i <= FRAME_HEIGHT; i += METERS_TO_PIXELS * 12 * Path.TO_METERS) {
+        counter = 1;
+        for(double i = METERS_TO_PIXELS * 12 * Path.TO_METERS; i <= FRAME_HEIGHT/2.; i += METERS_TO_PIXELS * 12 * Path.TO_METERS) {
+            g.setColor(Color.LIGHT_GRAY);
             g.fillRect(0, (int) (FRAME_HEIGHT/2 + i - 0.5), FRAME_WIDTH, 1);
             g.fillRect(0, (int) (FRAME_HEIGHT/2 - i - 0.5), FRAME_WIDTH, 1);
+
+            g.setColor(Color.DARK_GRAY);
+            g.drawString(" " + (counter/10 == 0 ? " " : "") + counter, FRAME_WIDTH/2-25, (int) (FRAME_HEIGHT/2 + i + 5));
+            g.drawString((counter/10 == 0 ? " " : "") + "-" + counter, FRAME_WIDTH/2-25, (int) (FRAME_HEIGHT/2 - i + 5));
+            counter++;
         }
 
         g.setColor(Color.BLACK);
         g.fillRect(FRAME_WIDTH/2-1, 0, 2, FRAME_HEIGHT);
         g.fillRect(0, FRAME_HEIGHT/2-1, FRAME_WIDTH, 2);
 
+//        g.drawString("1 ft", (int) (FRAME_WIDTH/2 + METERS_TO_PIXELS * 12 * Path.TO_METERS) - 10, FRAME_HEIGHT/2 + 20);
+
 
         //draw robot
 
-        Angle angle = robotPosition.getAngle();
-        Angle angle1 = new Angle(Math.PI/2 + robotPosition.getAngle().getAngle());
+        Angle angle = robotPoses.get(cur_pos_index).getAngle();
+        Angle angle1 = new Angle(Math.PI/2 + angle.getAngle());
 
-        Point2D pos = new Point2D(robotPosition.getPosition().x, robotPosition.getPosition().y);
+        Point2D pos = new Point2D(robotPoses.get(cur_pos_index).getPosition().x, robotPoses.get(cur_pos_index).getPosition().y);
 
         Point2D front = new Point2D(pos.x + TRACKLENGTH/2*angle.cos(), pos.y + TRACKLENGTH/2*angle.sin());
         Point2D back = new Point2D(pos.x - TRACKLENGTH/2*angle.cos(), pos.y - TRACKLENGTH/2*angle.sin());
@@ -87,7 +120,7 @@ public class PathVisualizer {
         //draw spline
         g.setColor(Color.RED);
 
-        g.setStroke(new BasicStroke(3));
+        g.setStroke(new BasicStroke(5));
 
         for(double i = 0; i < 1; i += 0.001) {
             Point2D start = path.getParametric().getPoint(i);
@@ -97,31 +130,66 @@ public class PathVisualizer {
                     convertXToPixels(end.x), convertYToPixels(end.y));
         }
 
-        g.setColor(new Color(100, 0, 0));
+        g.setColor(new Color(150, 0, 0));
         Point2D start = path.getParametric().getPoint(0);
         Point2D end = path.getParametric().getPoint(1);
 
-        g.fillOval(convertXToPixels(start.x)-3, convertYToPixels(start.y)-3, 6, 6);
-        g.fillOval(convertXToPixels(end.x)-3, convertYToPixels(end.y)-3, 6, 6);
+        g.fillOval(convertXToPixels(start.x)-5, convertYToPixels(start.y)-5, 10, 10);
+        g.fillOval(convertXToPixels(end.x)-5, convertYToPixels(end.y)-5, 10, 10);
 
         //draw path
         g.setColor(Color.CYAN);
 
-        g.setStroke(new BasicStroke(1));
+        g.setStroke(new BasicStroke(3));
 
-        g.fillOval(convertXToPixels(pos.x)-3, convertYToPixels(pos.y)-3, 6, 6);
+        g.fillOval(convertXToPixels(pos.x)-5, convertYToPixels(pos.y)-5, 10, 10);
 
-        for(int i = 0; i < robotPoses.size() - 1; i++) {
+        for(int i = 0; i < cur_pos_index; i++) {
             Pose2D pose1 = robotPoses.get(i);
             Pose2D pose2 = robotPoses.get(i+1);
 
             g.drawLine(convertXToPixels(pose1.getPosition().x), convertYToPixels(pose1.getPosition().y),convertXToPixels(pose2.getPosition().x), convertYToPixels(pose2.getPosition().y));
         }
+
+
+
+        //draw text
+
+        g.setColor(Color.BLACK);
+        g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 24));
+        g.drawString("Path Following Simulator", FRAME_WIDTH + 30, 150);
+
+        g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
+
+        DecimalFormat df = new DecimalFormat();
+        df.setMaximumFractionDigits(3);
+        df.setMinimumFractionDigits(3);
+
+        g.drawString("Left Velocity: " + df.format(velocities.get(cur_pos_index).getX()), FRAME_WIDTH+30, 350);
+        g.drawString("Right Velocity: " + df.format(velocities.get(cur_pos_index).getY()), FRAME_WIDTH+30, 400);
+
+        g.drawString("Angular Velocity: " + df.format(angularVelocities.get(cur_pos_index)), FRAME_WIDTH+30, 500);
+        g.drawString("Curvature: " + df.format(curvatures.get(cur_pos_index)), FRAME_WIDTH+30, 550);
+
+        g.drawString("Position: " + "(" + df.format(pos.x) + ", " + df.format(pos.y) + ")", FRAME_WIDTH+30, 650);
+        g.drawString("Endpoint: " + "(" + df.format(end.x) + ", " + df.format(end.y) + ")", FRAME_WIDTH+30, 700);
+
+    }
+
+    public void runSimulation() {
+        if(!simulating) {
+            if(runSim.getText().equals("RUN SIM")) {cur_pos_index = 0;}
+            simulating = true;
+            runSim.setText("STOP");
+        } else {
+            simulating = false;
+            runSim.setText("CONTINUE");
+        }
     }
 
     public boolean visualize(Pose2D startPosition, double END_TIME) {
 
-        JFrame frame = new JFrame();
+        frame = new JFrame();
 
         TITLE_HEIGHT = 28;
         FRAME_WIDTH = 800;
@@ -132,20 +200,30 @@ public class PathVisualizer {
 
         METERS_TO_PIXELS = 400 / maxMeters;
 
-        frame.setSize(FRAME_WIDTH, FRAME_HEIGHT + TITLE_HEIGHT);
+        frame.setSize(FRAME_WIDTH+400, FRAME_HEIGHT + TITLE_HEIGHT);
         frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 
-        JPanel component = new JPanel() {
+        component = new JPanel() {
             public void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g;
                 draw(g2);
             }
         };
 
+        runSim = new JButton("RUN SIM");
+        runSim.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
+        runSim.setBounds(FRAME_WIDTH+125, 200, 150, 50);
+        runSim.addActionListener(e -> runSimulation());
+
+        component.add(runSim);
+        component.setLayout(null);
         frame.add(component);
+
+//        frame.setLayout(null);
         frame.setVisible(true);
+
 
 
         cur_time = 0;
@@ -155,6 +233,11 @@ public class PathVisualizer {
 
 
         robotPoses.clear();
+
+        curvatures.add(path.getCurvature(robotPosition));
+        robotPoses.add(robotPosition);
+        velocities.add(new Vector2D(0, 0));
+        angularVelocities.add(0.);
 
         while(cur_time < END_TIME) {
 
@@ -180,27 +263,60 @@ public class PathVisualizer {
 
             cur_time += dt;
 
+            curvatures.add(path.getCurvature(robotPosition));
+
             robotPosition = new Pose2D(new_x, new_y, newAngle);
 
             robotPoses.add(robotPosition);
-
+            velocities.add(new Vector2D(dds.getLeftVelocity(), dds.getRightVelocity()));
+            angularVelocities.add(dds.getAngularVelocity());
 
             if(path.isFinished(robotPosition, THRESHOLD)) {
-                return true;
-            }
 
-            try {
-                Thread.sleep((long) (dt*1000));
+                curvatures.add(path.getCurvature(robotPosition));
 
-                component.updateUI();
+                robotPoses.add(robotPosition);
+                velocities.add(new Vector2D(0, 0));
+                angularVelocities.add(0.);
 
-            } catch (Exception e) {
-                e.printStackTrace();
+                break;
             }
 
         }
 
-        return false;
+        while(true) {
+            if(simulating) {
+                component.updateUI();
+
+                for (int i = cur_pos_index; i < robotPoses.size(); i++) {
+                    if(simulating) {
+                        try {
+                            Thread.sleep((long) (dt * 1000));
+
+                            cur_pos_index = i;
+                            component.updateUI();
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        break;
+                    }
+                }
+
+                if(simulating) {
+                    runSim.setText("RUN SIM");
+                    simulating = false;
+                }
+            }
+
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 
     public boolean visualize() {

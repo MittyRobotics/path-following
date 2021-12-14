@@ -73,6 +73,11 @@ public class Path {
         return PurePursuitController.purePursuit(purePursuitRadius, velocity, turnRight, trackwidth);
     }
 
+    public double getCurvature(Pose2D robotPose) {
+        double closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), 0.01, 10, 10);
+        return parametric.getCurvature(closestPointT);
+    }
+
     public double maxVelocityFromDistance(double distance, double endVelocity, double maxDeceleration) {
         //vf^2 = vi^2 + 2ad, solve for vi (deceleration = -a)
         if(distance > 0) return Math.sqrt(endVelocity * endVelocity + 2 * maxDeceleration * distance);

@@ -50,5 +50,7 @@ public class DifferentialDriveState {
         return rightVelocity;
     }
 
-
- }
+    public double getAngularVelocity() {
+        return angularVelocity;
+    }
+}
