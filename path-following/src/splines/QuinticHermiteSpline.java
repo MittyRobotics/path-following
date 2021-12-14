@@ -103,4 +103,9 @@ public class QuinticHermiteSpline extends Parametric {
                 h0 * pose0.getPosition().getY() + h1 * velocity0.getY() + h2 * acceleration0.getY() +
                         h3 * acceleration1.getY() + h4 * velocity1.getY() + h5 * pose1.getPosition().getY());
     }
+
+    public Pose2D getPose1() {return pose1;}
+    public Vector2D getVelocity1() {return velocity1;}
+    public Vector2D getAcceleration1() {return acceleration1;}
+
 }

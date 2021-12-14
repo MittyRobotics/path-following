@@ -11,8 +11,8 @@ import java.text.DecimalFormat;
 public class Test {
     public static void main(String[] args) {
         QuinticHermiteSpline spline = new QuinticHermiteSpline(
-                new Pose2D(80 * Path.TO_METERS, 70 * Path.TO_METERS, 2.4),
-                new Pose2D(-100 * Path.TO_METERS, -50 * Path.TO_METERS, 3.5)
+                new Pose2D(80 * Path.TO_METERS, 70 * Path.TO_METERS, 1),
+                new Pose2D(-100 * Path.TO_METERS, -50 * Path.TO_METERS, 2.4)
         );
 
         DecimalFormat df = new DecimalFormat();
@@ -24,7 +24,7 @@ public class Test {
             System.out.print("(" + df.format(point.getX()) + ", " + df.format(point.getY()) + "), ");
         }
         System.out.println();
-        Path path = new Path(spline, 50 * Path.TO_METERS, 50 * Path.TO_METERS, 80 * Path.TO_METERS, 70 * Path.TO_METERS, 0, 0);
+        Path path = new Path(spline, 50 * Path.TO_METERS, 50 * Path.TO_METERS, 80 * Path.TO_METERS, 100 * Path.TO_METERS, 0, 0);
 
 //        Pose2D robotPosition = new Pose2D(0, 0, 0);
 
@@ -32,12 +32,8 @@ public class Test {
         double trackwidth = 25 * 0.0254;
         double tracklength = 37 * 0.0254;
 
-        PathVisualizer visualizer = new PathVisualizer(path, 10*Path.TO_METERS, 1*Path.TO_METERS, trackwidth, tracklength);
+        PathVisualizer visualizer = new PathVisualizer(path, 10*Path.TO_METERS, 1*Path.TO_METERS, 2*Path.TO_METERS, trackwidth, tracklength);
 
-        if(visualizer.visualize()) {
-            System.out.println("REACHED ENDPOINT");
-        } else {
-            System.out.println("DID NOT REACH ENDPOINT");
-        }
+        visualizer.visualize();
     }
 }

@@ -1,10 +1,8 @@
 package path;
 
-import math.Angle;
-import math.Circle;
-import math.Point2D;
-import math.Pose2D;
+import math.*;
 import splines.Parametric;
+import splines.QuinticHermiteSpline;
 
 public class Path {
     private Parametric parametric;
@@ -34,7 +32,7 @@ public class Path {
         this(parametric, maxAcceleration, maxVelocity, 0, 0);
     }
 
-    public DifferentialDriveState update(Pose2D robotPose, double dt, double lookahead, double trackwidth) {
+    public DifferentialDriveState update(Pose2D robotPose, double dt, double lookahead, double threshold, double trackwidth) {
         double closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), 0.01, 10, 10);
         distanceTraveled = parametric.getGaussianQuadratureLength(closestPointT, 11);
 
@@ -56,13 +54,29 @@ public class Path {
 
         if(Double.isFinite(purePursuitRadius)) {
             double maxCurvatureVelocity = maxVelocityFromCurvature(purePursuitRadius);
-            System.out.println(maxCurvatureVelocity);
             velocity = Math.min(velocity, maxCurvatureVelocity);
         }
 
         prevVelocity = velocity;
 
+        if(parametric.getPoint(closestPointT).distance(robotPose.getPosition()) > threshold) {
+            Vector2D curVel = new Vector2D(velocity * robotPose.getAngle().cos(), velocity * robotPose.getAngle().sin());
+            double acc = (velocity - prevVelocity) / dt;
+            Vector2D curAcc = new Vector2D(acc * robotPose.getAngle().cos(), acc * robotPose.getAngle().sin());
+
+            parametric = parametric.getNewPath(robotPose, curVel, curAcc);
+
+            closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), 0.01, 10, 10);
+            distanceTraveled = parametric.getGaussianQuadratureLength(closestPointT, 11);
+
+        }
+
         return PurePursuitController.purePursuit(purePursuitRadius, velocity, turnRight, trackwidth);
+    }
+
+    public double distanceFromSpline(Pose2D robotPose) {
+        double closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), 0.01, 10, 10);
+        return parametric.getPoint(closestPointT).distance(robotPose.getPosition());
     }
 
     public double getCurvature(Pose2D robotPose) {

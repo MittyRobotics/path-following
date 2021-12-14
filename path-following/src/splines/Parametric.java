@@ -434,4 +434,12 @@ public class Parametric {
         return max;
     }
 
+    public Parametric getNewPath(Pose2D newPos, Vector2D newVel, Vector2D newAcc) {
+        if(this instanceof QuinticHermiteSpline) {
+            return new QuinticHermiteSpline(newPos, ((QuinticHermiteSpline) this).getPose1(), newVel,
+                    ((QuinticHermiteSpline) this).getVelocity1(), newAcc, ((QuinticHermiteSpline) this).getAcceleration1());
+        }
+        return new Parametric();
+    }
+
 }
