@@ -158,7 +158,7 @@ public class PathVisualizer {
 
         g.setColor(Color.BLACK);
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 24));
-        g.drawString("Path Following Simulator", FRAME_WIDTH + 30, 150);
+        g.drawString("Path Following Simulator", FRAME_WIDTH + 30, 80);
 
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
 
@@ -225,6 +225,8 @@ public class PathVisualizer {
         component = new JPanel() {
             public void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
                 draw(g2);
             }
         };
