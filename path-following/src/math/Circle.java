@@ -29,7 +29,7 @@ public class Circle {
 
         Line lineThroughPoints = new Line(pose.getPosition(), other);
 
-        if(lineThroughPoints.getSlope() == new Angle(pose.getAngleRadians()).tan()) {
+        if(Math.abs(lineThroughPoints.getSlope() - new Angle(pose.getAngleRadians()).tan()) < 2e-9) {
             this.radius = Double.POSITIVE_INFINITY;
         } else {
             Point2D midpoint = new Point2D((pose.getPosition().getX() + other.getX()) / 2, (pose.getPosition().getY() + other.getY()) / 2);

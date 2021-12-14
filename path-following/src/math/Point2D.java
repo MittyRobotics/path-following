@@ -1,8 +1,8 @@
 package math;
 
 public class Point2D {
-    private double x;
-    private double y;
+    public double x;
+    public double y;
 
     public Point2D(double x, double y) {
         this.x = x;
@@ -27,6 +27,10 @@ public class Point2D {
 
     public double distance(Point2D other) {
         return Math.sqrt((other.getX() - x) * (other.getX() - x) + (other.getY() - y) * (other.getY() - y));
+    }
+
+    public Point2D minus(Point2D other) {
+        return new Point2D(x - other.x, y - other.y);
     }
 
     public double magnitude() {

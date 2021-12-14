@@ -10,6 +10,9 @@ public class Path {
     private Parametric parametric;
     private double maxAcceleration, maxVelocity, endVelocity, maxDeceleration, maxAngularVelocity;
 
+    public static final double TO_METERS = 0.0254;
+    public static final double TO_INCHES = 39.3700787401;
+
     private double prevVelocity, distanceTraveled;
 
     public Path(Parametric parametric, double maxAcceleration, double maxDeceleration, double maxVelocity, double maxAngularVelocity, double startVelocity, double endVelocity) {
@@ -95,5 +98,7 @@ public class Path {
             return parametric.getPoint(parametric.getTFromLength(distanceTraveled + lookahead));
         }
     }
+
+    public Parametric getParametric() { return parametric; }
 
 }

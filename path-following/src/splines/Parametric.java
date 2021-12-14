@@ -421,4 +421,17 @@ public class Parametric {
         return t;
     }
 
+    public Vector2D getAbsoluteMaxCoordinates(double steps) {
+        Vector2D max = new Vector2D();
+
+        double stepsize = 1/steps;
+        for(double t = 0; t <= 1; t += stepsize) {
+            Point2D point = getPoint(t);
+            max.x = Math.max(max.x, Math.abs(point.getX()));
+            max.y = Math.max(max.y, Math.abs(point.getY()));
+        }
+
+        return max;
+    }
+
 }

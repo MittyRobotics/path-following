@@ -4,8 +4,8 @@ public class Vector2D {
     private Angle angle;
     private double magnitude;
 
-    private double x;
-    private double y;
+    public double x;
+    public double y;
 
     public Vector2D(Angle angle, double magnitude) {
         this.angle = angle;
