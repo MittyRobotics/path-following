@@ -26,6 +26,7 @@ public class PathVisualizer {
     private ArrayList<Vector2D> velocities = new ArrayList<>();
     private ArrayList<Double> angularVelocities = new ArrayList<>();
     private ArrayList<Double> curvatures = new ArrayList<>();
+    private ArrayList<Double> linearVelocities = new ArrayList<>();
 
     private int cur_pos_index = 0;
     private JFrame frame;
@@ -159,20 +160,33 @@ public class PathVisualizer {
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 24));
         g.drawString("Path Following Simulator", FRAME_WIDTH + 30, 150);
 
-        g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
+        g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
 
         DecimalFormat df = new DecimalFormat();
         df.setMaximumFractionDigits(3);
         df.setMinimumFractionDigits(3);
 
-        g.drawString("Left Velocity: " + df.format(velocities.get(cur_pos_index).getX()), FRAME_WIDTH+30, 350);
-        g.drawString("Right Velocity: " + df.format(velocities.get(cur_pos_index).getY()), FRAME_WIDTH+30, 400);
+        g.drawString("Velocity: " + df.format(linearVelocities.get(cur_pos_index)*Path.TO_INCHES) + " in/s", FRAME_WIDTH+30, 330);
+        g.drawString("Left Velocity: " + df.format(velocities.get(cur_pos_index).getX()*Path.TO_INCHES) + " in/s", FRAME_WIDTH+30, 360);
+        g.drawString("Right Velocity: " + df.format(velocities.get(cur_pos_index).getY()*Path.TO_INCHES) + " in/s", FRAME_WIDTH+30, 390);
 
-        g.drawString("Angular Velocity: " + df.format(angularVelocities.get(cur_pos_index)), FRAME_WIDTH+30, 500);
-        g.drawString("Curvature: " + df.format(curvatures.get(cur_pos_index)), FRAME_WIDTH+30, 550);
+        Vector2D acc = new Vector2D();
+        double lacc = 0;
+        if(cur_pos_index != 0 && cur_pos_index != velocities.size()-1) {
+            acc = new Vector2D((velocities.get(cur_pos_index).x - velocities.get(cur_pos_index-1).x)/dt,
+                    (velocities.get(cur_pos_index).y - velocities.get(cur_pos_index-1).y)/dt);
+            lacc = (linearVelocities.get(cur_pos_index) - linearVelocities.get(cur_pos_index-1))/dt;
+        }
 
-        g.drawString("Position: " + "(" + df.format(pos.x) + ", " + df.format(pos.y) + ")", FRAME_WIDTH+30, 650);
-        g.drawString("Endpoint: " + "(" + df.format(end.x) + ", " + df.format(end.y) + ")", FRAME_WIDTH+30, 700);
+        g.drawString("Acceleration: " + df.format(lacc*Path.TO_INCHES) + " in/s^2", FRAME_WIDTH+30, 440);
+        g.drawString("Left Acceleration: " + df.format(acc.x*Path.TO_INCHES) + " in/s^2", FRAME_WIDTH+30, 470);
+        g.drawString("Right Acceleration: " + df.format(acc.y*Path.TO_INCHES) + " in/s^2", FRAME_WIDTH+30, 500);
+
+        g.drawString("Angular Velocity: " + df.format(angularVelocities.get(cur_pos_index)*Path.TO_INCHES) + " in/s", FRAME_WIDTH+30, 550);
+        g.drawString("Curvature: " + df.format(curvatures.get(cur_pos_index)*Path.TO_METERS) + " in^-1", FRAME_WIDTH+30, 580);
+
+        g.drawString("Position: " + "(" + df.format(pos.x*Path.TO_INCHES) + " in, " + df.format(pos.y*Path.TO_INCHES) + " in)", FRAME_WIDTH+30, 630);
+        g.drawString("Endpoint: " + "(" + df.format(end.x*Path.TO_INCHES) + " in, " + df.format(end.y*Path.TO_INCHES) + " in)", FRAME_WIDTH+30, 660);
 
     }
 
@@ -238,6 +252,7 @@ public class PathVisualizer {
         robotPoses.add(robotPosition);
         velocities.add(new Vector2D(0, 0));
         angularVelocities.add(0.);
+        linearVelocities.add(0.);
 
         while(cur_time < END_TIME) {
 
@@ -270,6 +285,7 @@ public class PathVisualizer {
             robotPoses.add(robotPosition);
             velocities.add(new Vector2D(dds.getLeftVelocity(), dds.getRightVelocity()));
             angularVelocities.add(dds.getAngularVelocity());
+            linearVelocities.add(dds.getLinearVelocity());
 
             if(path.isFinished(robotPosition, THRESHOLD)) {
 
@@ -278,6 +294,7 @@ public class PathVisualizer {
                 robotPoses.add(robotPosition);
                 velocities.add(new Vector2D(0, 0));
                 angularVelocities.add(0.);
+                linearVelocities.add(0.);
 
                 break;
             }

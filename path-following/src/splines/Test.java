@@ -24,7 +24,7 @@ public class Test {
             System.out.print("(" + df.format(point.getX()) + ", " + df.format(point.getY()) + "), ");
         }
         System.out.println();
-        Path path = new Path(spline, 50 * Path.TO_METERS, 80 * Path.TO_METERS);
+        Path path = new Path(spline, 50 * Path.TO_METERS, 50 * Path.TO_METERS, 80 * Path.TO_METERS, 30 * Path.TO_METERS, 0, 0);
 
 //        Pose2D robotPosition = new Pose2D(0, 0, 0);
 

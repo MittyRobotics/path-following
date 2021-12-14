@@ -49,24 +49,16 @@ public class Path {
         double velocity = Math.min(Math.min(prevVelocity + maxAcceleration * dt, maxVelocityToEnd), maxVelocity);
 
 
-//        double maxCurvatureVelocity = maxVelocityFromCurvature(parametric.getCurvature(closestPointT));
         Circle tangentCircle = new Circle();
         tangentCircle.updateFromPoseAndPoint(robotPose, lookaheadPoint);
         double purePursuitRadius = tangentCircle.getRadius();
         boolean turnRight = (tangentCircle.orientationOfPoseAndPoint(robotPose, lookaheadPoint) == 1);
 
         if(Double.isFinite(purePursuitRadius)) {
-            double maxCurvatureVelocity = maxVelocityFromCurvature(1 / purePursuitRadius);
+            double maxCurvatureVelocity = maxVelocityFromCurvature(purePursuitRadius);
+            System.out.println(maxCurvatureVelocity);
             velocity = Math.min(velocity, maxCurvatureVelocity);
         }
-
-//        System.out.print("Pos: ");
-//        robotPose.getPosition().print();
-//
-//        System.out.print("Goal: ");
-//        lookaheadPoint.print();
-
-//        System.out.println(turnRight);
 
         prevVelocity = velocity;
 
@@ -84,9 +76,9 @@ public class Path {
         else return 0;
     }
 
-    public double maxVelocityFromCurvature(double curvature) {
+    public double maxVelocityFromCurvature(double radius) {
         if(Double.isInfinite(maxAngularVelocity)) return Double.POSITIVE_INFINITY;
-        else return curvature * maxAngularVelocity;
+        else return Math.abs(radius * maxAngularVelocity);
     }
 
     public boolean isFinished(Pose2D robotPosition, double threshold) {
