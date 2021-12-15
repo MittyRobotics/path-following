@@ -11,8 +11,8 @@ import java.text.DecimalFormat;
 public class Test {
     public static void main(String[] args) {
         QuinticHermiteSpline spline = new QuinticHermiteSpline(
-                new Pose2D(80 * Path.TO_METERS, 70 * Path.TO_METERS, 1),
-                new Pose2D(-100 * Path.TO_METERS, -50 * Path.TO_METERS, 2.4)
+                new Pose2D(300 * Path.TO_METERS, 200 * Path.TO_METERS, 1.3),
+                new Pose2D(0 * Path.TO_METERS, -50 * Path.TO_METERS, 2.4)
         );
 
         DecimalFormat df = new DecimalFormat();
@@ -32,7 +32,7 @@ public class Test {
         double trackwidth = 25 * 0.0254;
         double tracklength = 37 * 0.0254;
 
-        PathVisualizer visualizer = new PathVisualizer(path, 10*Path.TO_METERS, 1*Path.TO_METERS, 2*Path.TO_METERS, trackwidth, tracklength);
+        PathVisualizer visualizer = new PathVisualizer(path, 10*Path.TO_METERS, 1*Path.TO_METERS, 3*Path.TO_METERS, 30, trackwidth, tracklength);
 
         visualizer.visualize();
     }

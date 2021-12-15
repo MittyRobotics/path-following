@@ -32,8 +32,8 @@ public class Path {
         this(parametric, maxAcceleration, maxVelocity, 0, 0);
     }
 
-    public DifferentialDriveState update(Pose2D robotPose, double dt, double lookahead, double threshold, double trackwidth) {
-        double closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), 0.01, 10, 10);
+    public DifferentialDriveState update(Pose2D robotPose, double dt, double lookahead, double threshold, int newtonsSteps, double trackwidth) {
+        double closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), 0.01, newtonsSteps, 10);
         distanceTraveled = parametric.getGaussianQuadratureLength(closestPointT, 11);
 
         Point2D lookaheadPoint = getLookahead(distanceTraveled, lookahead);
@@ -60,6 +60,7 @@ public class Path {
         prevVelocity = velocity;
 
         if(parametric.getPoint(closestPointT).distance(robotPose.getPosition()) > threshold) {
+            System.out.println(parametric.getPoint(closestPointT).distance(robotPose.getPosition()));
             Vector2D curVel = new Vector2D(velocity * robotPose.getAngle().cos(), velocity * robotPose.getAngle().sin());
             double acc = (velocity - prevVelocity) / dt;
             Vector2D curAcc = new Vector2D(acc * robotPose.getAngle().cos(), acc * robotPose.getAngle().sin());
@@ -74,7 +75,11 @@ public class Path {
         return PurePursuitController.purePursuit(purePursuitRadius, velocity, turnRight, trackwidth);
     }
 
-    public double distanceFromSpline(Pose2D robotPose) {
+    public DifferentialDriveState update(Pose2D robotPose, double dt, double lookahead, double trackwidth) {
+        return update(robotPose, dt, lookahead, 5*Path.TO_METERS, 10, trackwidth);
+    }
+
+    public double distanceFromSpline(Parametric parametric, Pose2D robotPose) {
         double closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), 0.01, 10, 10);
         return parametric.getPoint(closestPointT).distance(robotPose.getPosition());
     }

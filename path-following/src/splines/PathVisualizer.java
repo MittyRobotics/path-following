@@ -21,7 +21,7 @@ public class PathVisualizer {
     private Pose2D robotPosition;
 
     private double METERS_TO_PIXELS;
-    private int TITLE_HEIGHT, FRAME_HEIGHT, FRAME_WIDTH;
+    private int TITLE_HEIGHT, FRAME_HEIGHT, FRAME_WIDTH, NEWTONS_STEPS;
     private ArrayList<Pose2D> robotPoses = new ArrayList<>();
     private ArrayList<Vector2D> velocities = new ArrayList<>();
     private ArrayList<Double> angularVelocities = new ArrayList<>();
@@ -36,25 +36,20 @@ public class PathVisualizer {
 
     boolean simulating = false;
 
-    public PathVisualizer(Path path, double LOOKAHEAD, double END_THRESHOLD, double ADJUST_THRESHOLD, double TRACKWIDTH, double TRACKLENGTH, double dt) {
+    public PathVisualizer(Path path, double LOOKAHEAD, double END_THRESHOLD, double ADJUST_THRESHOLD, int NEWTONS_STEPS, double TRACKWIDTH, double TRACKLENGTH, double dt) {
         this.path = path;
         this.LOOKAHEAD = LOOKAHEAD;
         this.END_THRESHOLD = END_THRESHOLD;
         this.ADJUST_THRESHOLD = ADJUST_THRESHOLD;
+        this.NEWTONS_STEPS = NEWTONS_STEPS;
         this.TRACKWIDTH = TRACKWIDTH;
         this.TRACKLENGTH = TRACKLENGTH;
 
         this.dt = dt;
     }
 
-    public PathVisualizer(Path path, double LOOKAHEAD, double THRESHOLD, double ADJUST_THRESHOLD, double TRACKWIDTH, double TRACKLENGTH) {
-        this(path, LOOKAHEAD, THRESHOLD, ADJUST_THRESHOLD, TRACKWIDTH, TRACKLENGTH, 0.02);
-    }
-
-    public void updatePath(Path path, double LOOKAHEAD, double THRESHOLD) {
-        this.path = path;
-        this.LOOKAHEAD = LOOKAHEAD;
-        this.END_THRESHOLD = THRESHOLD;
+    public PathVisualizer(Path path, double LOOKAHEAD, double THRESHOLD, double ADJUST_THRESHOLD, int NEWTONS_STEPS, double TRACKWIDTH, double TRACKLENGTH) {
+        this(path, LOOKAHEAD, THRESHOLD, ADJUST_THRESHOLD, NEWTONS_STEPS, TRACKWIDTH, TRACKLENGTH, 0.02);
     }
 
     public void draw(Graphics2D g) {
@@ -71,9 +66,11 @@ public class PathVisualizer {
             g.fillRect((int) (FRAME_WIDTH/2 + i - 0.5), 0, 1, FRAME_HEIGHT);
             g.fillRect((int) (FRAME_WIDTH/2 - i - 0.5), 0, 1, FRAME_HEIGHT);
 
-            g.setColor(Color.DARK_GRAY);
-            g.drawString(" " + (counter/10 == 0 ? " " : "")  + counter, (int) (FRAME_WIDTH/2 + i - 15), FRAME_HEIGHT/2+15);
-            g.drawString((counter/10 == 0 ? " " : "") + "-" + counter, (int) (FRAME_WIDTH/2 - i - 15), FRAME_HEIGHT/2+15);
+            if(counter % 5 == 0) {
+                g.setColor(Color.DARK_GRAY);
+                g.drawString(" " + (counter / 10 == 0 ? " " : "") + counter, (int) (FRAME_WIDTH / 2 + i - 15), FRAME_HEIGHT / 2 + 15);
+                g.drawString((counter / 10 == 0 ? " " : "") + "-" + counter, (int) (FRAME_WIDTH / 2 - i - 15), FRAME_HEIGHT / 2 + 15);
+            }
 
             counter++;
         }
@@ -84,9 +81,12 @@ public class PathVisualizer {
             g.fillRect(0, (int) (FRAME_HEIGHT/2 + i - 0.5), FRAME_WIDTH, 1);
             g.fillRect(0, (int) (FRAME_HEIGHT/2 - i - 0.5), FRAME_WIDTH, 1);
 
-            g.setColor(Color.DARK_GRAY);
-            g.drawString(" " + (counter/10 == 0 ? " " : "") + counter, FRAME_WIDTH/2-25, (int) (FRAME_HEIGHT/2 + i + 5));
-            g.drawString((counter/10 == 0 ? " " : "") + "-" + counter, FRAME_WIDTH/2-25, (int) (FRAME_HEIGHT/2 - i + 5));
+            if(counter % 5 == 0) {
+                g.setColor(Color.DARK_GRAY);
+                g.drawString(" " + (counter / 10 == 0 ? " " : "") + counter, FRAME_WIDTH / 2 - 25, (int) (FRAME_HEIGHT / 2 - i + 5));
+                g.drawString((counter / 10 == 0 ? " " : "") + "-" + counter, FRAME_WIDTH / 2 - 25, (int) (FRAME_HEIGHT / 2 + i + 5));
+            }
+
             counter++;
         }
 
@@ -188,7 +188,7 @@ public class PathVisualizer {
         g.drawString("Curvature: " + df.format(curvatures.get(cur_pos_index)*Path.TO_METERS) + " in^-1", FRAME_WIDTH+30, 430);
 
         g.drawString("Position: " + "(" + df.format(pos.x*Path.TO_INCHES) + " in, " + df.format(pos.y*Path.TO_INCHES) + " in)", FRAME_WIDTH+30, 480);
-        g.drawString("Distance From Spline: " + df.format(path.distanceFromSpline(robotPoses.get(cur_pos_index)) * Path.TO_INCHES) + " in", FRAME_WIDTH+30, 510);
+        g.drawString("Distance From Spline: " + df.format(path.distanceFromSpline(parametrics.get(cur_pos_index), robotPoses.get(cur_pos_index)) * Path.TO_INCHES) + " in", FRAME_WIDTH+30, 510);
         g.drawString("Angle: " + df.format(angle.getAngle() * 180 / Math.PI) + " °", FRAME_WIDTH+30, 540);
         g.drawString("Endpoint: " + "(" + df.format(end.x*Path.TO_INCHES) + " in, " + df.format(end.y*Path.TO_INCHES) + " in)", FRAME_WIDTH+30, 570);
         double endAngle = path.getParametric().getPose(1).getAngleRadians();
@@ -268,7 +268,7 @@ public class PathVisualizer {
 
         while(cur_time < END_TIME) {
 
-            DifferentialDriveState dds = path.update(robotPosition, dt, LOOKAHEAD, ADJUST_THRESHOLD, TRACKWIDTH);
+            DifferentialDriveState dds = path.update(robotPosition, dt, LOOKAHEAD, ADJUST_THRESHOLD, NEWTONS_STEPS, TRACKWIDTH);
             double left = dds.getLeftVelocity() * dt;
             double right = dds.getRightVelocity() * dt;
             Angle angle = robotPosition.getAngle();
