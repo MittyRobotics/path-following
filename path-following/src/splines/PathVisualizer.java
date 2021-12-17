@@ -11,8 +11,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.sql.Array;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import javax.swing.*;
 import javax.swing.border.Border;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 public class PathVisualizer {
 
@@ -23,6 +28,7 @@ public class PathVisualizer {
     private double METERS_TO_PIXELS;
     private int TITLE_HEIGHT, FRAME_HEIGHT, FRAME_WIDTH, NEWTONS_STEPS;
     private ArrayList<Pose2D> robotPoses = new ArrayList<>();
+    private ArrayList<Point2D> lookaheads = new ArrayList<>();
     private ArrayList<Vector2D> velocities = new ArrayList<>();
     private ArrayList<Double> angularVelocities = new ArrayList<>();
     private ArrayList<Double> curvatures = new ArrayList<>();
@@ -33,6 +39,7 @@ public class PathVisualizer {
     private JFrame frame;
     private JComponent component;
     private JButton runSim;
+    private JSlider timeSlider;
 
     boolean simulating = false;
 
@@ -54,10 +61,17 @@ public class PathVisualizer {
 
     public void draw(Graphics2D g) {
 
+        if(timeSlider != null) {
+            timeSlider.setValue(cur_pos_index);
+            if (cur_pos_index == velocities.size() - 1) {
+                runSim.setText("RUN SIM");
+            }
+        }
+
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
 
         //draw grid
-        g.setColor(Color.WHITE);
+        g.setColor(new Color(230, 230, 230));
         g.fillRect(0, 0, FRAME_WIDTH+400, FRAME_HEIGHT);
 
         int counter = 1;
@@ -154,6 +168,9 @@ public class PathVisualizer {
             g.drawLine(convertXToPixels(pose1.getPosition().x), convertYToPixels(pose1.getPosition().y),convertXToPixels(pose2.getPosition().x), convertYToPixels(pose2.getPosition().y));
         }
 
+        g.setColor(Color.GREEN);
+        g.fillOval(convertXToPixels(lookaheads.get(cur_pos_index).x)-5, convertYToPixels(lookaheads.get(cur_pos_index).y)-5, 10, 10);
+
 
 
         //draw text
@@ -197,6 +214,8 @@ public class PathVisualizer {
         g.drawString("Time Elapsed: " + df.format(cur_pos_index * 0.02) + " s", FRAME_WIDTH+30, 650);
         g.drawString("Total Time: " + df.format((velocities.size()-1) * 0.02) + " s", FRAME_WIDTH+30, 680);
 
+        g.drawString("Adjust Time", FRAME_WIDTH+30, 730);
+
     }
 
     public void runSimulation() {
@@ -210,6 +229,14 @@ public class PathVisualizer {
         }
     }
 
+    public void setTime(int ind) {
+        if(ind != cur_pos_index) {
+            simulating = false;
+            runSim.setText("CONTINUE");
+            cur_pos_index = ind;
+        }
+    }
+
     public void visualize(Pose2D startPosition, double END_TIME) {
 
         frame = new JFrame();
@@ -219,7 +246,7 @@ public class PathVisualizer {
         FRAME_HEIGHT = 800;
 
         Vector2D maxPoint = path.getParametric().getAbsoluteMaxCoordinates(1000);
-        double maxMeters = Math.max(maxPoint.getX(), maxPoint.getY()) * 7./5.;
+        double maxMeters = Math.max(maxPoint.getX(), maxPoint.getY()) + Math.max(TRACKLENGTH, TRACKWIDTH);
 
         METERS_TO_PIXELS = 400 / maxMeters;
 
@@ -237,12 +264,7 @@ public class PathVisualizer {
             }
         };
 
-        runSim = new JButton("RUN SIM");
-        runSim.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
-        runSim.setBounds(FRAME_WIDTH+125, 100, 150, 50);
-        runSim.addActionListener(e -> runSimulation());
 
-        component.add(runSim);
         component.setLayout(null);
         frame.add(component);
 
@@ -259,8 +281,9 @@ public class PathVisualizer {
 
         robotPoses.clear();
 
-        curvatures.add(path.getCurvature(robotPosition));
+        curvatures.add(path.getCurvature());
         robotPoses.add(robotPosition);
+        lookaheads.add(path.getLookaheadFromRobotPose(robotPosition, LOOKAHEAD, NEWTONS_STEPS));
         velocities.add(new Vector2D(0, 0));
         angularVelocities.add(0.);
         linearVelocities.add(0.);
@@ -268,7 +291,7 @@ public class PathVisualizer {
 
         while(cur_time < END_TIME) {
 
-            DifferentialDriveState dds = path.update(robotPosition, dt, LOOKAHEAD, ADJUST_THRESHOLD, NEWTONS_STEPS, TRACKWIDTH);
+            DifferentialDriveState dds = path.update(robotPosition, dt, LOOKAHEAD, END_THRESHOLD, ADJUST_THRESHOLD, NEWTONS_STEPS, TRACKWIDTH);
             double left = dds.getLeftVelocity() * dt;
             double right = dds.getRightVelocity() * dt;
             Angle angle = robotPosition.getAngle();
@@ -290,11 +313,12 @@ public class PathVisualizer {
 
             cur_time += dt;
 
-            curvatures.add(path.getCurvature(robotPosition));
+            curvatures.add(path.getCurvature());
 
             robotPosition = new Pose2D(new_x, new_y, newAngle);
 
             robotPoses.add(robotPosition);
+            lookaheads.add(path.getLookaheadFromRobotPose(robotPosition, LOOKAHEAD, NEWTONS_STEPS));
             velocities.add(new Vector2D(dds.getLeftVelocity(), dds.getRightVelocity()));
             angularVelocities.add(dds.getAngularVelocity());
             linearVelocities.add(dds.getLinearVelocity());
@@ -302,9 +326,9 @@ public class PathVisualizer {
 
             if(path.isFinished(robotPosition, END_THRESHOLD)) {
 
-                curvatures.add(path.getCurvature(robotPosition));
-
+                curvatures.add(path.getCurvature());
                 robotPoses.add(robotPosition);
+                lookaheads.add(path.getLookaheadFromRobotPose(robotPosition, LOOKAHEAD, NEWTONS_STEPS));
                 velocities.add(new Vector2D(0, 0));
                 angularVelocities.add(0.);
                 linearVelocities.add(0.);
@@ -315,10 +339,28 @@ public class PathVisualizer {
 
         }
 
-        while(true) {
-            if(simulating) {
-                component.updateUI();
 
+        runSim = new JButton("RUN SIM");
+        runSim.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
+        runSim.setBounds(FRAME_WIDTH+125, 100, 150, 50);
+        runSim.addActionListener(e -> runSimulation());
+
+        timeSlider = new JSlider(JSlider.HORIZONTAL, 0, velocities.size()-1, 0);
+        timeSlider.setPaintTicks(false);
+        timeSlider.setPaintLabels(false);
+
+        timeSlider.setBounds(FRAME_WIDTH+30, 750, 340, 20);
+
+        timeSlider.addChangeListener(e -> setTime(timeSlider.getValue()));
+
+        component.add(runSim);
+        component.add(timeSlider);
+
+
+        Runnable simRunnable = () -> {
+            component.updateUI();
+
+            if(simulating) {
                 for (int i = cur_pos_index; i < robotPoses.size(); i++) {
                     if(simulating) {
                         try {
@@ -340,13 +382,10 @@ public class PathVisualizer {
                     simulating = false;
                 }
             }
+        };
 
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
+        executorService.scheduleAtFixedRate(simRunnable, 0, 10, TimeUnit.MILLISECONDS);
 
     }
 

@@ -11,8 +11,8 @@ import java.text.DecimalFormat;
 public class Test {
     public static void main(String[] args) {
         QuinticHermiteSpline spline = new QuinticHermiteSpline(
-                new Pose2D(300 * Path.TO_METERS, 200 * Path.TO_METERS, 1.3),
-                new Pose2D(0 * Path.TO_METERS, -50 * Path.TO_METERS, 2.4)
+                new Pose2D(-200 * Path.TO_METERS, -100 * Path.TO_METERS, 1.3),
+                new Pose2D(100 * Path.TO_METERS, 50 * Path.TO_METERS, 1.5)
         );
 
         DecimalFormat df = new DecimalFormat();
@@ -24,7 +24,7 @@ public class Test {
             System.out.print("(" + df.format(point.getX()) + ", " + df.format(point.getY()) + "), ");
         }
         System.out.println();
-        Path path = new Path(spline, 50 * Path.TO_METERS, 50 * Path.TO_METERS, 80 * Path.TO_METERS, 100 * Path.TO_METERS, 0, 0);
+        Path path = new Path(spline, 50 * Path.TO_METERS, 50 * Path.TO_METERS, 120 * Path.TO_METERS, 100 * Path.TO_METERS, 0, 0);
 
 //        Pose2D robotPosition = new Pose2D(0, 0, 0);
 

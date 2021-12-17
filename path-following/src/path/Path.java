@@ -2,7 +2,8 @@ package path;
 
 import math.*;
 import splines.Parametric;
-import splines.QuinticHermiteSpline;
+
+import java.util.ArrayList;
 
 public class Path {
     private Parametric parametric;
@@ -11,7 +12,11 @@ public class Path {
     public static final double TO_METERS = 0.0254;
     public static final double TO_INCHES = 39.3700787401;
 
-    private double prevVelocity, distanceTraveled;
+    private double prevVelocity, distanceTraveled, closestPointT, distanceToEnd, maxVelocityToEnd, velocity, purePursuitRadius;
+    boolean turnRight;
+    Circle tangentCircle = new Circle();
+    Point2D lookaheadPoint = new Point2D();
+    private ArrayList<Vector2D> previewVelocities = new ArrayList<>();
 
     public Path(Parametric parametric, double maxAcceleration, double maxDeceleration, double maxVelocity, double maxAngularVelocity, double startVelocity, double endVelocity) {
         this.parametric = parametric;
@@ -32,61 +37,103 @@ public class Path {
         this(parametric, maxAcceleration, maxVelocity, 0, 0);
     }
 
-    public DifferentialDriveState update(Pose2D robotPose, double dt, double lookahead, double threshold, int newtonsSteps, double trackwidth) {
-        double closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), 0.01, newtonsSteps, 10);
+    public DifferentialDriveState update(Pose2D robotPose, double dt, double lookahead, double end_threshold, double adjust_threshold, int newtonsSteps, double trackwidth) {
+        closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), 0.01, newtonsSteps, 10);
         distanceTraveled = parametric.getGaussianQuadratureLength(closestPointT, 11);
 
-        Point2D lookaheadPoint = getLookahead(distanceTraveled, lookahead);
+        lookaheadPoint = getLookahead(distanceTraveled, lookahead);
 
 //        parametric.getPoint(closestPointT).print();
 
-        double distanceToEnd = parametric.getLength() - distanceTraveled;
-        double maxVelocityToEnd = maxVelocityFromDistance(distanceToEnd, endVelocity, maxDeceleration);
+        distanceToEnd = parametric.getLength() - distanceTraveled - end_threshold;
+        maxVelocityToEnd = maxVelocityFromDistance(distanceToEnd, endVelocity, maxDeceleration);
 
 
-        double velocity = Math.min(Math.min(prevVelocity + maxAcceleration * dt, maxVelocityToEnd), maxVelocity);
+        velocity = Math.min(Math.min(prevVelocity + maxAcceleration * dt, maxVelocityToEnd), maxVelocity);
+//        System.out.println(distanceToEnd * Path.TO_INCHES + " " + maxVelocityToEnd * Path.TO_INCHES);
 
+        double previewDistance = distanceToSlowdown(prevVelocity, 0, maxDeceleration);
+//        System.out.println(previewDistance * Path.TO_INCHES);
+        double previewT = parametric.getTFromLength(distanceTraveled + previewDistance);
+        double maxVelocityAtPreview = maxVelocityFromT(previewT);
 
-        Circle tangentCircle = new Circle();
-        tangentCircle.updateFromPoseAndPoint(robotPose, lookaheadPoint);
-        double purePursuitRadius = tangentCircle.getRadius();
-        boolean turnRight = (tangentCircle.orientationOfPoseAndPoint(robotPose, lookaheadPoint) == 1);
+        previewVelocities.add(new Vector2D(maxVelocityAtPreview, distanceTraveled + previewDistance));
+        clearOldPreviewed();
+
+        double maxVelocityFromPreviews = getMaxVelocityFromPreviews();
+
+//        System.out.println(robotPose.getPosition().x * Path.TO_INCHES + " " + robotPose.getPosition().y * Path.TO_INCHES + " " + maxVelocityFromPreviews * Path.TO_INCHES);
+
+        velocity = Math.min(maxVelocityFromPreviews, velocity);
 
         if(Double.isFinite(purePursuitRadius)) {
-            double maxCurvatureVelocity = maxVelocityFromCurvature(purePursuitRadius);
+            double maxCurvatureVelocity = maxVelocityFromRadius(purePursuitRadius);
+
             velocity = Math.min(velocity, maxCurvatureVelocity);
         }
 
+        velocity = Math.max(prevVelocity - maxDeceleration * dt, velocity);
+
         prevVelocity = velocity;
 
-        if(parametric.getPoint(closestPointT).distance(robotPose.getPosition()) > threshold) {
-            System.out.println(parametric.getPoint(closestPointT).distance(robotPose.getPosition()));
+
+        tangentCircle.updateFromPoseAndPoint(robotPose, lookaheadPoint);
+        purePursuitRadius = tangentCircle.getRadius();
+        turnRight = (tangentCircle.orientationOfPoseAndPoint(robotPose, lookaheadPoint) == 1);
+
+
+        if(parametric.getPoint(closestPointT).distance(robotPose.getPosition()) > adjust_threshold) {
+//            System.out.println(parametric.getPoint(closestPointT).distance(robotPose.getPosition()));
             Vector2D curVel = new Vector2D(velocity * robotPose.getAngle().cos(), velocity * robotPose.getAngle().sin());
             double acc = (velocity - prevVelocity) / dt;
             Vector2D curAcc = new Vector2D(acc * robotPose.getAngle().cos(), acc * robotPose.getAngle().sin());
 
             parametric = parametric.getNewPath(robotPose, curVel, curAcc);
 
-            closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), 0.01, 10, 10);
-            distanceTraveled = parametric.getGaussianQuadratureLength(closestPointT, 11);
+//            closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), 0.01, 10, 10);
+//            distanceTraveled = parametric.getGaussianQuadratureLength(closestPointT, 11);
 
         }
 
         return PurePursuitController.purePursuit(purePursuitRadius, velocity, turnRight, trackwidth);
     }
 
-    public DifferentialDriveState update(Pose2D robotPose, double dt, double lookahead, double trackwidth) {
-        return update(robotPose, dt, lookahead, 5*Path.TO_METERS, 10, trackwidth);
+    public void clearOldPreviewed() {
+        previewVelocities.removeIf(previewVelocity -> previewVelocity.getY() <= distanceTraveled);
+    }
+
+    public DifferentialDriveState update(Pose2D robotPose, double dt, double lookahead, double end_threshold, double trackwidth) {
+        return update(robotPose, dt, lookahead, end_threshold, 5*Path.TO_METERS, 10, trackwidth);
+    }
+
+    public double getMaxVelocityFromPreviews() {
+        double min = Double.POSITIVE_INFINITY;
+
+        for(Vector2D vel : previewVelocities) {
+            min = Math.min(min, maxVelocityFromDistance(vel.y-distanceTraveled, vel.x, maxDeceleration));
+        }
+
+        return min;
+    }
+
+    public double maxVelocityFromT(double t) {
+        return maxVelocityFromRadius(1/(getCurvature(t)));
+    }
+
+    public double distanceToSlowdown(double curVelocity, double endVelocity, double maxDeceleration) {
+        return (curVelocity * curVelocity - endVelocity * endVelocity) / 2 * maxDeceleration;
     }
 
     public double distanceFromSpline(Parametric parametric, Pose2D robotPose) {
-        double closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), 0.01, 10, 10);
         return parametric.getPoint(closestPointT).distance(robotPose.getPosition());
     }
 
-    public double getCurvature(Pose2D robotPose) {
-        double closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), 0.01, 10, 10);
+    public double getCurvature() {
         return parametric.getCurvature(closestPointT);
+    }
+
+    public double getCurvature(double t) {
+        return parametric.getCurvature(t);
     }
 
     public double maxVelocityFromDistance(double distance, double endVelocity, double maxDeceleration) {
@@ -95,7 +142,7 @@ public class Path {
         else return 0;
     }
 
-    public double maxVelocityFromCurvature(double radius) {
+    public double maxVelocityFromRadius(double radius) {
         if(Double.isInfinite(maxAngularVelocity)) return Double.POSITIVE_INFINITY;
         else return Math.abs(radius * maxAngularVelocity);
     }
@@ -113,6 +160,10 @@ public class Path {
         } else {
             return parametric.getPoint(parametric.getTFromLength(distanceTraveled + lookahead));
         }
+    }
+
+    public Point2D getLookaheadFromRobotPose(Pose2D robotPose, double lookahead, int newtonsSteps) {
+        return lookaheadPoint;
     }
 
     public Parametric getParametric() { return parametric; }
