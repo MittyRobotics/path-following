@@ -124,7 +124,9 @@ public class Path {
         return (curVelocity * curVelocity - endVelocity * endVelocity) / 2 * maxDeceleration;
     }
 
-    public double distanceFromSpline(Parametric parametric, Pose2D robotPose) {
+    public double distanceFromSpline(Parametric parametric, Pose2D robotPose, int newtonsSteps) {
+        closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), 0.01, newtonsSteps, 10);
+
         return parametric.getPoint(closestPointT).distance(robotPose.getPosition());
     }
 
@@ -163,7 +165,10 @@ public class Path {
     }
 
     public Point2D getLookaheadFromRobotPose(Pose2D robotPose, double lookahead, int newtonsSteps) {
-        return lookaheadPoint;
+        closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), 0.01, newtonsSteps, 10);
+        distanceTraveled = parametric.getGaussianQuadratureLength(closestPointT, 11);
+
+        return getLookahead(distanceTraveled, lookahead);
     }
 
     public Parametric getParametric() { return parametric; }
