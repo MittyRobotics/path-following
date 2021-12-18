@@ -191,7 +191,7 @@ public class PathVisualizer {
 
         Vector2D acc = new Vector2D();
         double lacc = 0;
-        if(cur_pos_index != 0 && cur_pos_index != velocities.size()-1) {
+        if(cur_pos_index != 0) {
             acc = new Vector2D((velocities.get(cur_pos_index).x - velocities.get(cur_pos_index-1).x)/dt,
                     (velocities.get(cur_pos_index).y - velocities.get(cur_pos_index-1).y)/dt);
             lacc = (linearVelocities.get(cur_pos_index) - linearVelocities.get(cur_pos_index-1))/dt;
@@ -281,12 +281,12 @@ public class PathVisualizer {
 
         robotPoses.clear();
 
-        curvatures.add(path.getCurvature());
+        curvatures.add(path.getCurvature(0));
         robotPoses.add(robotPosition);
         lookaheads.add(path.getLookaheadFromRobotPose(robotPosition, LOOKAHEAD, NEWTONS_STEPS));
-        velocities.add(new Vector2D(0, 0));
-        angularVelocities.add(0.);
-        linearVelocities.add(0.);
+        velocities.add(new Vector2D(path.getStartingVelocity(), path.getStartingVelocity()));
+        angularVelocities.add(path.getAngularVelocityAtPoint(0, path.getStartingVelocity()));
+        linearVelocities.add(path.getStartingVelocity());
         parametrics.add(path.getParametric());
 
         while(cur_time < END_TIME) {
@@ -325,15 +325,6 @@ public class PathVisualizer {
             parametrics.add(path.getParametric());
 
             if(path.isFinished(robotPosition, END_THRESHOLD)) {
-
-                curvatures.add(path.getCurvature());
-                robotPoses.add(robotPosition);
-                lookaheads.add(path.getLookaheadFromRobotPose(robotPosition, LOOKAHEAD, NEWTONS_STEPS));
-                velocities.add(new Vector2D(0, 0));
-                angularVelocities.add(0.);
-                linearVelocities.add(0.);
-                parametrics.add(path.getParametric());
-
                 break;
             }
 

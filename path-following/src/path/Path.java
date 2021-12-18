@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 public class Path {
     private Parametric parametric;
-    private double maxAcceleration, maxVelocity, endVelocity, maxDeceleration, maxAngularVelocity;
+    private double maxAcceleration, maxVelocity, startVelocity, endVelocity, maxDeceleration, maxAngularVelocity;
 
     public static final double TO_METERS = 0.0254;
     public static final double TO_INCHES = 39.3700787401;
@@ -26,6 +26,7 @@ public class Path {
         this.maxAngularVelocity = maxAngularVelocity;
         this.endVelocity = endVelocity;
 
+        this.startVelocity = startVelocity;
         this.prevVelocity = startVelocity;
     }
 
@@ -90,9 +91,6 @@ public class Path {
 
             parametric = parametric.getNewPath(robotPose, curVel, curAcc);
 
-//            closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), 0.01, 10, 10);
-//            distanceTraveled = parametric.getGaussianQuadratureLength(closestPointT, 11);
-
         }
 
         return PurePursuitController.purePursuit(purePursuitRadius, velocity, turnRight, trackwidth);
@@ -130,12 +128,12 @@ public class Path {
         return parametric.getPoint(closestPointT).distance(robotPose.getPosition());
     }
 
-    public double getCurvature() {
-        return parametric.getCurvature(closestPointT);
-    }
-
     public double getCurvature(double t) {
         return parametric.getCurvature(t);
+    }
+
+    public double getCurvature() {
+        return parametric.getCurvature(closestPointT);
     }
 
     public double maxVelocityFromDistance(double distance, double endVelocity, double maxDeceleration) {
@@ -147,6 +145,10 @@ public class Path {
     public double maxVelocityFromRadius(double radius) {
         if(Double.isInfinite(maxAngularVelocity)) return Double.POSITIVE_INFINITY;
         else return Math.abs(radius * maxAngularVelocity);
+    }
+
+    public double getAngularVelocityAtPoint(double t, double linearVelocity) {
+        return linearVelocity * getCurvature(t);
     }
 
     public boolean isFinished(Pose2D robotPosition, double threshold) {
@@ -169,6 +171,10 @@ public class Path {
         distanceTraveled = parametric.getGaussianQuadratureLength(closestPointT, 11);
 
         return getLookahead(distanceTraveled, lookahead);
+    }
+
+    public double getStartingVelocity() {
+        return startVelocity;
     }
 
     public Parametric getParametric() { return parametric; }
