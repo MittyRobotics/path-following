@@ -44,17 +44,13 @@ public class Path {
 
         lookaheadPoint = getLookahead(distanceTraveled, lookahead);
 
-//        parametric.getPoint(closestPointT).print();
+        distanceToEnd = parametric.getLength() - distanceTraveled - (prevVelocity - maxDeceleration * dt) * dt - end_threshold;
 
-        distanceToEnd = parametric.getLength() - distanceTraveled - end_threshold;
         maxVelocityToEnd = maxVelocityFromDistance(distanceToEnd, endVelocity, maxDeceleration);
 
-
         velocity = Math.min(Math.min(prevVelocity + maxAcceleration * dt, maxVelocityToEnd), maxVelocity);
-//        System.out.println(distanceToEnd * Path.TO_INCHES + " " + maxVelocityToEnd * Path.TO_INCHES);
 
         double previewDistance = distanceToSlowdown(prevVelocity, 0, maxDeceleration);
-//        System.out.println(previewDistance * Path.TO_INCHES);
         double previewT = parametric.getTFromLength(distanceTraveled + previewDistance);
         double maxVelocityAtPreview = maxVelocityFromT(previewT);
 
@@ -62,8 +58,6 @@ public class Path {
         clearOldPreviewed();
 
         double maxVelocityFromPreviews = getMaxVelocityFromPreviews();
-
-//        System.out.println(robotPose.getPosition().x * Path.TO_INCHES + " " + robotPose.getPosition().y * Path.TO_INCHES + " " + maxVelocityFromPreviews * Path.TO_INCHES);
 
         velocity = Math.min(maxVelocityFromPreviews, velocity);
 
@@ -84,7 +78,6 @@ public class Path {
 
 
         if(parametric.getPoint(closestPointT).distance(robotPose.getPosition()) > adjust_threshold) {
-//            System.out.println(parametric.getPoint(closestPointT).distance(robotPose.getPosition()));
             Vector2D curVel = new Vector2D(velocity * robotPose.getAngle().cos(), velocity * robotPose.getAngle().sin());
             double acc = (velocity - prevVelocity) / dt;
             Vector2D curAcc = new Vector2D(acc * robotPose.getAngle().cos(), acc * robotPose.getAngle().sin());
