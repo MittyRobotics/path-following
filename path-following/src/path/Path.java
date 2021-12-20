@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 public class Path {
     private Parametric parametric;
+
     private double maxAcceleration, maxVelocity, startVelocity, endVelocity, maxDeceleration, maxAngularVelocity;
 
     public static final double TO_METERS = 0.0254;
@@ -44,7 +45,7 @@ public class Path {
 
         lookaheadPoint = getLookahead(distanceTraveled, lookahead);
 
-        distanceToEnd = parametric.getLength() - distanceTraveled - (prevVelocity - maxDeceleration * dt) * dt - end_threshold;
+        distanceToEnd = parametric.getLength() - distanceTraveled - (prevVelocity - maxDeceleration * dt) * dt - end_threshold * 4/5;
 
         maxVelocityToEnd = maxVelocityFromDistance(distanceToEnd, endVelocity, maxDeceleration);
 
@@ -166,10 +167,54 @@ public class Path {
         return getLookahead(distanceTraveled, lookahead);
     }
 
-    public double getStartingVelocity() {
+    public Parametric getParametric() { return parametric; }
+
+    public void setMaxAcceleration(double maxAcceleration) {
+        this.maxAcceleration = maxAcceleration;
+    }
+
+    public void setMaxVelocity(double maxVelocity) {
+        this.maxVelocity = maxVelocity;
+    }
+
+    public void setStartVelocity(double startVelocity) {
+        this.startVelocity = startVelocity;
+    }
+
+    public void setEndVelocity(double endVelocity) {
+        this.endVelocity = endVelocity;
+    }
+
+    public void setMaxDeceleration(double maxDeceleration) {
+        this.maxDeceleration = maxDeceleration;
+    }
+
+    public void setMaxAngularVelocity(double maxAngularVelocity) {
+        this.maxAngularVelocity = maxAngularVelocity;
+    }
+
+    public double getMaxAcceleration() {
+        return maxAcceleration;
+    }
+
+    public double getMaxVelocity() {
+        return maxVelocity;
+    }
+
+    public double getStartVelocity() {
         return startVelocity;
     }
 
-    public Parametric getParametric() { return parametric; }
+    public double getEndVelocity() {
+        return endVelocity;
+    }
+
+    public double getMaxDeceleration() {
+        return maxDeceleration;
+    }
+
+    public double getMaxAngularVelocity() {
+        return maxAngularVelocity;
+    }
 
 }

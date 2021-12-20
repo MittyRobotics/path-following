@@ -1,18 +1,17 @@
-package splines;
+package visualiser;
 
-import math.Angle;
 import math.Point2D;
 import math.Pose2D;
-import path.DifferentialDriveState;
 import path.Path;
+import splines.QuinticHermiteSpline;
 
 import java.text.DecimalFormat;
 
 public class Test {
     public static void main(String[] args) {
         QuinticHermiteSpline spline = new QuinticHermiteSpline(
-                new Pose2D(-200 * Path.TO_METERS, 50 * Path.TO_METERS, -1.3),
-                new Pose2D(100 * Path.TO_METERS, 50 * Path.TO_METERS, 1.3)
+                new Pose2D(100 * Path.TO_METERS, 50 * Path.TO_METERS, 1.3),
+                new Pose2D(-200 * Path.TO_METERS, 50 * Path.TO_METERS, -1.3)
         );
 
         DecimalFormat df = new DecimalFormat();
@@ -34,6 +33,6 @@ public class Test {
 
         PathVisualizer visualizer = new PathVisualizer(path, 10*Path.TO_METERS, 1*Path.TO_METERS, 3*Path.TO_METERS, 30, trackwidth, tracklength);
 
-        visualizer.visualize();
+        visualizer.run();
     }
 }
