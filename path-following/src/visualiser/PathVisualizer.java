@@ -363,6 +363,18 @@ public class PathVisualizer {
 
         toggleAdjustFrame();
 
+        component.remove(timeSlider);
+
+        timeSlider = new JSlider(JSlider.HORIZONTAL, 0, velocities.size()-1, 0);
+        timeSlider.setPaintTicks(false);
+        timeSlider.setPaintLabels(false);
+
+        timeSlider.setBounds(FRAME_WIDTH+30, 750, 340, 20);
+
+        timeSlider.addChangeListener(e -> setTime(timeSlider.getValue()));
+
+        component.add(timeSlider);
+
         return 0;
     }
 
