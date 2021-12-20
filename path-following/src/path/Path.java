@@ -169,30 +169,6 @@ public class Path {
 
     public Parametric getParametric() { return parametric; }
 
-    public void setMaxAcceleration(double maxAcceleration) {
-        this.maxAcceleration = maxAcceleration;
-    }
-
-    public void setMaxVelocity(double maxVelocity) {
-        this.maxVelocity = maxVelocity;
-    }
-
-    public void setStartVelocity(double startVelocity) {
-        this.startVelocity = startVelocity;
-    }
-
-    public void setEndVelocity(double endVelocity) {
-        this.endVelocity = endVelocity;
-    }
-
-    public void setMaxDeceleration(double maxDeceleration) {
-        this.maxDeceleration = maxDeceleration;
-    }
-
-    public void setMaxAngularVelocity(double maxAngularVelocity) {
-        this.maxAngularVelocity = maxAngularVelocity;
-    }
-
     public double getMaxAcceleration() {
         return maxAcceleration;
     }

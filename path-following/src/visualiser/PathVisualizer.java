@@ -23,8 +23,8 @@ public class PathVisualizer {
     private final double dt;
     private final double TRACKWIDTH;
     private final double TRACKLENGTH;
-    private double cur_time;
-    private Pose2D robotPosition;
+    private double cur_time, END_TIME;
+    private Pose2D robotPosition, startPosition;
 
     private double METERS_TO_PIXELS;
     private int TITLE_HEIGHT;
@@ -44,10 +44,10 @@ public class PathVisualizer {
     private int cur_pos_index = 0;
     private JFrame frame, adjustFrame;
     private JComponent component, adjustComponent;
-    private JButton runSim, adjustButton;
+    private JButton runSimButton, adjustButton, updateButton;
     private JSlider timeSlider;
     private JTextField[] rightFields, leftFields;
-    private final String[] rightLabels = {"Max Acceleration", "Max Deceleration", "Max Velocity", "Max Angular Velocity", "Start Velocity", "End Velocity"};
+    private final String[] rightLabels = {"Max Acceleration", "Max Deceleration", "Max Velocity", "Max Angular Vel.", "Start Velocity", "End Velocity", "Start Position X", "Start Position Y", "Start Angle"};
     private final String[] leftLabels = {"Pose 0 X", "Pose 0 Y", "Pose 0 Angle", "Pose 1 X", "Pose 1 Y", "Pose 1 Angle", "Velocity 0 X", "Velocity 0 Y", "Velocity 1 X", "Velocity 1 Y", "Acceleration 0 X", "Acceleration 0 Y", "Acceleration 1 X", "Acceleration 1 Y"};
 
     private ScheduledExecutorService executorService;
@@ -75,7 +75,7 @@ public class PathVisualizer {
         if(timeSlider != null) {
             timeSlider.setValue(cur_pos_index);
             if (cur_pos_index == velocities.size() - 1) {
-                runSim.setText("RUN SIM");
+                runSimButton.setText("RUN SIM");
             }
         }
 
@@ -231,19 +231,19 @@ public class PathVisualizer {
 
     public void runSimulation() {
         if(!simulating) {
-            if(runSim.getText().equals("RUN SIM")) {cur_pos_index = 0;}
+            if(runSimButton.getText().equals("RUN SIM")) {cur_pos_index = 0;}
             simulating = true;
-            runSim.setText("STOP");
+            runSimButton.setText("STOP");
         } else {
             simulating = false;
-            runSim.setText("CONTINUE");
+            runSimButton.setText("CONTINUE");
         }
     }
 
     public void setTime(int ind) {
         if(ind != cur_pos_index) {
             simulating = false;
-            runSim.setText("CONTINUE");
+            runSimButton.setText("CONTINUE");
             cur_pos_index = ind;
         }
     }
@@ -258,6 +258,9 @@ public class PathVisualizer {
         rightFields[3].setText(df.format(path.getMaxAngularVelocity() * Path.TO_INCHES));
         rightFields[4].setText(df.format(path.getStartVelocity() * Path.TO_INCHES));
         rightFields[5].setText(df.format(path.getEndVelocity() * Path.TO_INCHES));
+        rightFields[6].setText(df.format(startPosition.getPosition().x * Path.TO_INCHES));
+        rightFields[7].setText(df.format(startPosition.getPosition().y * Path.TO_INCHES));
+        rightFields[8].setText(df.format(startPosition.getAngleRadians() * 180 / Math.PI));
 
         leftFields[0].setText(df.format(path.getParametric().getPoint(0).x * Path.TO_INCHES));
         leftFields[1].setText(df.format(path.getParametric().getPoint(0).y * Path.TO_INCHES));
@@ -304,17 +307,27 @@ public class PathVisualizer {
         String maxAngVel = rightFields[3].getText();
         String stVel = rightFields[4].getText();
         String endVel = rightFields[5].getText();
+        String startX = rightFields[6].getText();
+        String startY = rightFields[7].getText();
+        String startAng = rightFields[8].getText();
+
+        this.startPosition = new Pose2D(returnNumber(startX) * Path.TO_METERS, returnNumber(startY) * Path.TO_METERS, returnNumber(startAng) * Math.PI / 180);
 
         path = new Path(newParametric, returnNumber(maxAcc) * Path.TO_METERS, returnNumber(maxDec) * Path.TO_METERS, returnNumber(maxVel) * Path.TO_METERS,
                 returnNumber(maxAngVel) * Path.TO_METERS, returnNumber(stVel) * Path.TO_METERS, returnNumber(endVel) * Path.TO_METERS);
     }
 
-    public boolean checkPathAdjust(int i, String s) {
+    public int checkAdjust(int i, String s, boolean pos) {
         try {
-            Double.parseDouble(rightFields[i].getText());
-            return true;
+            double d = Double.parseDouble(s);
+            if(pos) {
+                if(d < 0) {
+                    return 2;
+                }
+            }
+            return 0;
         } catch (Exception e) {
-            return false;
+            return 1;
         }
     }
 
@@ -326,7 +339,37 @@ public class PathVisualizer {
         adjustFrame.setVisible(!adjustFrame.isVisible());
     }
 
+    public int update() {
+        for(int i = 0; i < leftFields.length; i++) {
+            if(checkAdjust(i, leftFields[i].getText(), false) == 1) {
+                JOptionPane.showMessageDialog(null, leftLabels[i] + " must be a number");
+                return -1;
+            }
+        }
+
+        for(int i = 0; i < rightFields.length; i++) {
+            if(checkAdjust(i, rightFields[i].getText(), true) == 1) {
+                JOptionPane.showMessageDialog(null, rightLabels[i] + " must be a number");
+                return -1;
+            } else if (checkAdjust(i, rightFields[i].getText(), true) == 2) {
+                JOptionPane.showMessageDialog(null, rightLabels[i] + " must be positive");
+                return -1;
+            }
+        }
+
+        submitAdjustFrame();
+
+        simulate(startPosition, END_TIME);
+
+        toggleAdjustFrame();
+
+        return 0;
+    }
+
     public void run(Pose2D startPosition, double END_TIME) {
+
+        this.END_TIME = END_TIME;
+        this.startPosition = startPosition;
 
         simulate(startPosition, END_TIME);
 
@@ -335,7 +378,7 @@ public class PathVisualizer {
         TITLE_HEIGHT = 28;
         FRAME_WIDTH = 800;
         FRAME_HEIGHT = 800;
-        ADJUST_FRAME_HEIGHT = 700;
+        ADJUST_FRAME_HEIGHT = 730;
         ADJUST_FRAME_WIDTH = 800;
 
         frame.setSize(FRAME_WIDTH+400, FRAME_HEIGHT + TITLE_HEIGHT);
@@ -412,6 +455,13 @@ public class PathVisualizer {
         l2.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 24));
         l2.setBounds(ADJUST_FRAME_WIDTH/2 + 50, 30, ADJUST_FRAME_WIDTH/2-50, 30);
 
+        updateButton = new JButton("Update");
+        updateButton.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 24));
+        updateButton.setBounds(ADJUST_FRAME_WIDTH/2-100, ADJUST_FRAME_HEIGHT-70, 200, 50);
+        updateButton.addActionListener(e -> update());
+
+        adjustComponent.add(updateButton);
+
         adjustComponent.add(l2);
 
         updateAdjustFrame();
@@ -425,10 +475,10 @@ public class PathVisualizer {
 
 
 
-        runSim = new JButton("RUN SIM");
-        runSim.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
-        runSim.setBounds(FRAME_WIDTH+125, 100, 150, 50);
-        runSim.addActionListener(e -> runSimulation());
+        runSimButton = new JButton("RUN SIM");
+        runSimButton.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
+        runSimButton.setBounds(FRAME_WIDTH+125, 100, 150, 50);
+        runSimButton.addActionListener(e -> runSimulation());
 
         timeSlider = new JSlider(JSlider.HORIZONTAL, 0, velocities.size()-1, 0);
         timeSlider.setPaintTicks(false);
@@ -438,7 +488,7 @@ public class PathVisualizer {
 
         timeSlider.addChangeListener(e -> setTime(timeSlider.getValue()));
 
-        component.add(runSim);
+        component.add(runSimButton);
         component.add(timeSlider);
 
         adjustButton = new JButton("Adjust Path");
@@ -470,7 +520,7 @@ public class PathVisualizer {
                 }
 
                 if(simulating) {
-                    runSim.setText("RUN SIM");
+                    runSimButton.setText("RUN SIM");
                     simulating = false;
                 }
             }
@@ -482,6 +532,8 @@ public class PathVisualizer {
     }
 
     public void simulate(Pose2D startPosition, double END_TIME) {
+
+        cur_pos_index = 0;
 
         Vector2D maxPoint = path.getParametric().getAbsoluteMaxCoordinates(1000);
         double maxMeters = Math.max(maxPoint.getX(), maxPoint.getY()) + Math.max(TRACKLENGTH, TRACKWIDTH);
