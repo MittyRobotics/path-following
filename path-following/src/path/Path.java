@@ -83,6 +83,10 @@ public class Path {
             double acc = (velocity - prevVelocity) / dt;
             Vector2D curAcc = new Vector2D(acc * robotPose.getAngle().cos(), acc * robotPose.getAngle().sin());
 
+            robotPose.print();
+            curVel.print();
+            curAcc.print();
+
             parametric = parametric.getNewPath(robotPose, curVel, curAcc);
 
         }

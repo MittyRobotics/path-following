@@ -350,7 +350,7 @@ public class PathVisualizer {
     public int update() {
         for(int i = 0; i < leftFields.length; i++) {
             if(checkAdjust(i, leftFields[i].getText(), false) == 1) {
-                JOptionPane.showMessageDialog(null, leftLabels[i] + " must be a number");
+                JOptionPane.showMessageDialog(adjustComponent, leftLabels[i] + " must be a number");
                 return -1;
             }
         }
@@ -360,15 +360,15 @@ public class PathVisualizer {
                 try {
                     int t = Integer.parseInt(rightFields[i].getText());
                 } catch (Exception e) {
-                    JOptionPane.showMessageDialog(null, rightLabels[i] + " must be an integer");
+                    JOptionPane.showMessageDialog(adjustComponent, rightLabels[i] + " must be an integer");
                     return -1;
                 }
             }
             if(checkAdjust(i, rightFields[i].getText(), true) == 1) {
-                JOptionPane.showMessageDialog(null, rightLabels[i] + " must be a number");
+                JOptionPane.showMessageDialog(adjustComponent, rightLabels[i] + " must be a number");
                 return -1;
             } else if (checkAdjust(i, rightFields[i].getText(), true) == 2) {
-                JOptionPane.showMessageDialog(null, rightLabels[i] + " must be positive");
+                JOptionPane.showMessageDialog(adjustComponent, rightLabels[i] + " must be positive");
                 return -1;
             }
         }
@@ -430,7 +430,6 @@ public class PathVisualizer {
         component.setLayout(null);
         frame.add(component);
 
-//        frame.setLayout(null);
         frame.setVisible(true);
 
 
