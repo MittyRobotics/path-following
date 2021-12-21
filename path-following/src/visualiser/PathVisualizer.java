@@ -17,9 +17,9 @@ import javax.swing.*;
 public class PathVisualizer {
 
     private Path path;
-    private final double LOOKAHEAD;
-    private final double END_THRESHOLD;
-    private final double ADJUST_THRESHOLD;
+    private double LOOKAHEAD;
+    private double END_THRESHOLD;
+    private double ADJUST_THRESHOLD;
     private final double dt;
     private final double TRACKWIDTH;
     private final double TRACKLENGTH;
@@ -32,7 +32,7 @@ public class PathVisualizer {
     private int FRAME_WIDTH;
     private int ADJUST_FRAME_HEIGHT;
     private int ADJUST_FRAME_WIDTH;
-    private final int NEWTONS_STEPS;
+    private int NEWTONS_STEPS;
     private final ArrayList<Pose2D> robotPoses = new ArrayList<>();
     private final ArrayList<Point2D> lookaheads = new ArrayList<>();
     private final ArrayList<Vector2D> velocities = new ArrayList<>();
@@ -47,9 +47,8 @@ public class PathVisualizer {
     private JButton runSimButton, adjustButton, updateButton;
     private JSlider timeSlider;
     private JTextField[] rightFields, leftFields;
-    private final String[] rightLabels = {"Max Acceleration", "Max Deceleration", "Max Velocity", "Max Angular Vel.", "Start Velocity", "End Velocity", "Start Position X", "Start Position Y", "Start Angle"};
+    private final String[] rightLabels = {"Max Acceleration", "Max Deceleration", "Max Velocity", "Max Angular Vel.", "Start Velocity", "End Velocity", "Start Position X", "Start Position Y", "Start Angle", "Lookahead", "End Threshold", "Adjust Threshold", "Newton's Steps"};
     private final String[] leftLabels = {"Pose 0 X", "Pose 0 Y", "Pose 0 Angle", "Pose 1 X", "Pose 1 Y", "Pose 1 Angle", "Velocity 0 X", "Velocity 0 Y", "Velocity 1 X", "Velocity 1 Y", "Acceleration 0 X", "Acceleration 0 Y", "Acceleration 1 X", "Acceleration 1 Y"};
-
     private ScheduledExecutorService executorService;
 
     boolean simulating = false;
@@ -261,6 +260,10 @@ public class PathVisualizer {
         rightFields[6].setText(df.format(startPosition.getPosition().x * Path.TO_INCHES));
         rightFields[7].setText(df.format(startPosition.getPosition().y * Path.TO_INCHES));
         rightFields[8].setText(df.format(startPosition.getAngleRadians() * 180 / Math.PI));
+        rightFields[9].setText(df.format(LOOKAHEAD * Path.TO_INCHES));
+        rightFields[10].setText(df.format(END_THRESHOLD * Path.TO_INCHES));
+        rightFields[11].setText(df.format(ADJUST_THRESHOLD * Path.TO_INCHES));
+        rightFields[12].setText(df.format(NEWTONS_STEPS));
 
         leftFields[0].setText(df.format(path.getParametric().getPoint(0).x * Path.TO_INCHES));
         leftFields[1].setText(df.format(path.getParametric().getPoint(0).y * Path.TO_INCHES));
@@ -315,6 +318,11 @@ public class PathVisualizer {
 
         path = new Path(newParametric, returnNumber(maxAcc) * Path.TO_METERS, returnNumber(maxDec) * Path.TO_METERS, returnNumber(maxVel) * Path.TO_METERS,
                 returnNumber(maxAngVel) * Path.TO_METERS, returnNumber(stVel) * Path.TO_METERS, returnNumber(endVel) * Path.TO_METERS);
+
+        LOOKAHEAD = returnNumber(rightFields[9].getText()) * Path.TO_METERS;
+        END_THRESHOLD = returnNumber(rightFields[10].getText()) * Path.TO_METERS;
+        ADJUST_THRESHOLD = returnNumber(rightFields[11].getText()) * Path.TO_METERS;
+        NEWTONS_STEPS = Integer.parseInt(rightFields[12].getText());
     }
 
     public int checkAdjust(int i, String s, boolean pos) {
@@ -348,6 +356,14 @@ public class PathVisualizer {
         }
 
         for(int i = 0; i < rightFields.length; i++) {
+            if(i == 12) {
+                try {
+                    int t = Integer.parseInt(rightFields[i].getText());
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(null, rightLabels[i] + " must be an integer");
+                    return -1;
+                }
+            }
             if(checkAdjust(i, rightFields[i].getText(), true) == 1) {
                 JOptionPane.showMessageDialog(null, rightLabels[i] + " must be a number");
                 return -1;
@@ -365,6 +381,12 @@ public class PathVisualizer {
 
         component.remove(timeSlider);
 
+        updateTimeSlider();
+
+        return 0;
+    }
+
+    private void updateTimeSlider() {
         timeSlider = new JSlider(JSlider.HORIZONTAL, 0, velocities.size()-1, 0);
         timeSlider.setPaintTicks(false);
         timeSlider.setPaintLabels(false);
@@ -374,8 +396,6 @@ public class PathVisualizer {
         timeSlider.addChangeListener(e -> setTime(timeSlider.getValue()));
 
         component.add(timeSlider);
-
-        return 0;
     }
 
     public void run(Pose2D startPosition, double END_TIME) {
@@ -478,11 +498,6 @@ public class PathVisualizer {
 
         updateAdjustFrame();
 
-//        TextForm form = new TextForm(labels, widths);
-//        form.setBounds(ADJUST_FRAME_WIDTH/2 + 20, 0, ADJUST_FRAME_WIDTH-20, 40 * labels.length);
-
-//        adjustComponent.add(form);
-
         adjustFrame.setVisible(false);
 
 
@@ -492,16 +507,9 @@ public class PathVisualizer {
         runSimButton.setBounds(FRAME_WIDTH+125, 100, 150, 50);
         runSimButton.addActionListener(e -> runSimulation());
 
-        timeSlider = new JSlider(JSlider.HORIZONTAL, 0, velocities.size()-1, 0);
-        timeSlider.setPaintTicks(false);
-        timeSlider.setPaintLabels(false);
-
-        timeSlider.setBounds(FRAME_WIDTH+30, 750, 340, 20);
-
-        timeSlider.addChangeListener(e -> setTime(timeSlider.getValue()));
-
         component.add(runSimButton);
-        component.add(timeSlider);
+
+        updateTimeSlider();
 
         adjustButton = new JButton("Adjust Path");
         adjustButton.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
