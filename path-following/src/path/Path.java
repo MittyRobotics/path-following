@@ -45,7 +45,7 @@ public class Path {
 
         lookaheadPoint = getLookahead(distanceTraveled, lookahead);
 
-        distanceToEnd = parametric.getLength() - distanceTraveled - (prevVelocity - maxDeceleration * dt) * dt - end_threshold * 4/5;
+        distanceToEnd = parametric.getLength() - distanceTraveled - (prevVelocity - maxDeceleration * dt) * dt - end_threshold * 0.8;
 
         maxVelocityToEnd = maxVelocityFromDistance(distanceToEnd, endVelocity, maxDeceleration);
 
@@ -82,10 +82,6 @@ public class Path {
             Vector2D curVel = new Vector2D(velocity * robotPose.getAngle().cos(), velocity * robotPose.getAngle().sin());
             double acc = (velocity - prevVelocity) / dt;
             Vector2D curAcc = new Vector2D(acc * robotPose.getAngle().cos(), acc * robotPose.getAngle().sin());
-
-            robotPose.print();
-            curVel.print();
-            curAcc.print();
 
             parametric = parametric.getNewPath(robotPose, curVel, curAcc);
 

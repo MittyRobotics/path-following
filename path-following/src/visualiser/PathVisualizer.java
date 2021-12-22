@@ -44,7 +44,7 @@ public class PathVisualizer {
     private int cur_pos_index = 0;
     private JFrame frame, adjustFrame;
     private JComponent component, adjustComponent;
-    private JButton runSimButton, adjustButton, updateButton;
+    private JButton runSimButton, adjustButton, updateButton, exportButton;
     private JSlider timeSlider;
     private JTextField[] rightFields, leftFields;
     private final String[] rightLabels = {"Max Acceleration", "Max Deceleration", "Max Velocity", "Max Angular Vel.", "Start Velocity", "End Velocity", "Start Position X", "Start Position Y", "Start Angle", "Lookahead", "End Threshold", "Adjust Threshold", "Newton's Steps"};
@@ -325,6 +325,34 @@ public class PathVisualizer {
         NEWTONS_STEPS = Integer.parseInt(rightFields[12].getText());
     }
 
+    public int checkAll() {
+        for(int i = 0; i < leftFields.length; i++) {
+            if(checkAdjust(i, leftFields[i].getText(), false) == 1) {
+                JOptionPane.showMessageDialog(adjustComponent, leftLabels[i] + " must be a number");
+                return -1;
+            }
+        }
+
+        for(int i = 0; i < rightFields.length; i++) {
+            if(i == 12) {
+                try {
+                    Integer.parseInt(rightFields[i].getText());
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(adjustComponent, rightLabels[i] + " must be an integer");
+                    return -1;
+                }
+            }
+            if(checkAdjust(i, rightFields[i].getText(), true) == 1) {
+                JOptionPane.showMessageDialog(adjustComponent, rightLabels[i] + " must be a number");
+                return -1;
+            } else if (checkAdjust(i, rightFields[i].getText(), true) == 2 && i != 6 && i != 7) {
+                JOptionPane.showMessageDialog(adjustComponent, rightLabels[i] + " must be positive");
+                return -1;
+            }
+        }
+        return 0;
+    }
+
     public int checkAdjust(int i, String s, boolean pos) {
         try {
             double d = Double.parseDouble(s);
@@ -348,29 +376,9 @@ public class PathVisualizer {
     }
 
     public int update() {
-        for(int i = 0; i < leftFields.length; i++) {
-            if(checkAdjust(i, leftFields[i].getText(), false) == 1) {
-                JOptionPane.showMessageDialog(adjustComponent, leftLabels[i] + " must be a number");
-                return -1;
-            }
-        }
 
-        for(int i = 0; i < rightFields.length; i++) {
-            if(i == 12) {
-                try {
-                    int t = Integer.parseInt(rightFields[i].getText());
-                } catch (Exception e) {
-                    JOptionPane.showMessageDialog(adjustComponent, rightLabels[i] + " must be an integer");
-                    return -1;
-                }
-            }
-            if(checkAdjust(i, rightFields[i].getText(), true) == 1) {
-                JOptionPane.showMessageDialog(adjustComponent, rightLabels[i] + " must be a number");
-                return -1;
-            } else if (checkAdjust(i, rightFields[i].getText(), true) == 2) {
-                JOptionPane.showMessageDialog(adjustComponent, rightLabels[i] + " must be positive");
-                return -1;
-            }
+        if(checkAll() != 0) {
+            return -1;
         }
 
         submitAdjustFrame();
@@ -380,8 +388,15 @@ public class PathVisualizer {
         toggleAdjustFrame();
 
         component.remove(timeSlider);
+        timeSlider.setValue(0);
 
         updateTimeSlider();
+
+        cur_pos_index = 0;
+        simulating = false;
+        runSimButton.setText("RUN SIM");
+
+        component.updateUI();
 
         return 0;
     }
@@ -396,6 +411,102 @@ public class PathVisualizer {
         timeSlider.addChangeListener(e -> setTime(timeSlider.getValue()));
 
         component.add(timeSlider);
+    }
+
+    public int exportPath() {
+
+        if(checkAll() != 0) {
+            return -1;
+        }
+
+        String pose0X = leftFields[0].getText();
+        String pose0Y = leftFields[1].getText();
+        String pose0Angle = leftFields[2].getText();
+        String pose1X = leftFields[3].getText();
+        String pose1Y = leftFields[4].getText();
+        String pose1Angle = leftFields[5].getText();
+        String vel0X = leftFields[6].getText();
+        String vel0Y = leftFields[7].getText();
+        String vel1X = leftFields[8].getText();
+        String vel1Y = leftFields[9].getText();
+        String acc0X = leftFields[10].getText();
+        String acc0Y = leftFields[11].getText();
+        String acc1X = leftFields[12].getText();
+        String acc1Y = leftFields[13].getText();
+
+        Parametric newParametric = new QuinticHermiteSpline(new Pose2D(returnNumber(pose0X) * Path.TO_METERS, returnNumber(pose0Y) * Path.TO_METERS, returnNumber(pose0Angle) * Math.PI / 180),
+                new Pose2D(returnNumber(pose1X) * Path.TO_METERS, returnNumber(pose1Y) * Path.TO_METERS, returnNumber(pose1Angle) * Math.PI / 180),
+                new Vector2D(returnNumber(vel0X) * Path.TO_METERS, returnNumber(vel0Y) * Path.TO_METERS), new Vector2D(returnNumber(vel1X) * Path.TO_METERS, returnNumber(vel1Y) * Path.TO_METERS),
+                new Vector2D(returnNumber(acc0X) * Path.TO_METERS, returnNumber(acc0Y) * Path.TO_METERS), new Vector2D(returnNumber(acc1X) * Path.TO_METERS, returnNumber(acc1Y) * Path.TO_METERS));
+
+        String maxAcc = rightFields[0].getText();
+        String maxDec = rightFields[1].getText();
+        String maxVel = rightFields[2].getText();
+        String maxAngVel = rightFields[3].getText();
+        String stVel = rightFields[4].getText();
+        String endVel = rightFields[5].getText();
+        String startX = rightFields[6].getText();
+        String startY = rightFields[7].getText();
+        String startAng = rightFields[8].getText();
+
+        this.startPosition = new Pose2D(returnNumber(startX) * Path.TO_METERS, returnNumber(startY) * Path.TO_METERS, returnNumber(startAng) * Math.PI / 180);
+
+        path = new Path(newParametric, returnNumber(maxAcc) * Path.TO_METERS, returnNumber(maxDec) * Path.TO_METERS, returnNumber(maxVel) * Path.TO_METERS,
+                returnNumber(maxAngVel) * Path.TO_METERS, returnNumber(stVel) * Path.TO_METERS, returnNumber(endVel) * Path.TO_METERS);
+
+        LOOKAHEAD = returnNumber(rightFields[9].getText()) * Path.TO_METERS;
+        END_THRESHOLD = returnNumber(rightFields[10].getText()) * Path.TO_METERS;
+        ADJUST_THRESHOLD = returnNumber(rightFields[11].getText()) * Path.TO_METERS;
+        NEWTONS_STEPS = Integer.parseInt(rightFields[12].getText());
+
+
+
+        JFrame exportFrame = new JFrame();
+        exportFrame.setSize(1000, 500 + TITLE_HEIGHT);
+        exportFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        exportFrame.setResizable(false);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(null);
+
+        JTextArea f = new JTextArea();
+        f.setEditable(false);
+        f.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
+        f.setBounds(20, 20, 960, 460);
+        f.setBackground(null);
+        f.setBorder(null);
+        f.setLineWrap(true);
+        f.setWrapStyleWord(true);
+        f.setText(
+                "private double LOOKAHEAD = " + rightFields[9].getText() + " * Path.TO_METERS;\nprivate double END_THRESHOLD = " + rightFields[10].getText() + " * Path.TO_METERS;\n" +
+                "private double ADJUST_THRESHOLD = " + rightFields[11].getText() + " * Path.TO_METERS;\nprivate int NEWTON_STEPS = " + NEWTONS_STEPS + ";\n\n" +
+                "QuinticHermiteSpline parametric = new QuinticHermiteSpline(\n    new Pose2D(" + pose0X + " * Path.TO_METERS, " +
+                pose0Y + " * Path.TO_METERS, " + pose0Angle + " * Math.PI/180), \n    new Pose2D(" + pose1X + " * Path.TO_METERS, " +
+                pose1Y + " * Path.TO_METERS, " + pose1Angle + " * Math.PI/180), \n    new Vector2D(" + vel0X + " * Path.TO_METERS, " +
+                vel0Y + " * Path.TO_METERS), \n    new Vector2D(" + vel1X + " * Path.TO_METERS, " + vel1Y + " * Path.TO_METERS), \n    new Vector2D(" +
+                acc0X + " * Path.TO_METERS, " + acc0Y + " * Path.TO_METERS), \n    new Vector2D(" + acc1X + " * Path.TO_METERS, " +
+                acc1Y + " * Path.TO_METERS)\n);\n\n" +
+                "Path path = new Path(parametric, \n    " + maxAcc + " * Path.TO_METERS, " + maxDec + " * Path.TO_METERS, \n    "
+                + maxVel + " * Path.TO_METERS, " + maxAngVel + " * Path.TO_METERS, \n    " + stVel + " * Path.TO_METERS, " + endVel + " * Path.TO_METERS\n);"
+        );
+        panel.add(f);
+
+        exportFrame.add(panel);
+
+        exportFrame.setVisible(true);
+
+        System.out.println("private double LOOKAHEAD = " + rightFields[9].getText() + " * Path.TO_METERS;\nprivate double END_THRESHOLD = " + rightFields[10].getText() + " * Path.TO_METERS;\n" +
+                "private double ADJUST_THRESHOLD = " + rightFields[11].getText() + " * Path.TO_METERS;\nprivate int NEWTON_STEPS = " + NEWTONS_STEPS + ";\n\n" +
+                "QuinticHermiteSpline parametric = new QuinticHermiteSpline(\n    new Pose2D(" + pose0X + " * Path.TO_METERS, " +
+                pose0Y + " * Path.TO_METERS, " + pose0Angle + " * Math.PI/180), \n    new Pose2D(" + pose1X + " * Path.TO_METERS, " +
+                pose1Y + " * Path.TO_METERS, " + pose1Angle + " * Math.PI/180), \n    new Vector2D(" + vel0X + " * Path.TO_METERS, " +
+                vel0Y + " * Path.TO_METERS), \n    new Vector2D(" + vel1X + " * Path.TO_METERS, " + vel1Y + " * Path.TO_METERS), \n    new Vector2D(" +
+                acc0X + " * Path.TO_METERS, " + acc0Y + " * Path.TO_METERS), \n    new Vector2D(" + acc1X + " * Path.TO_METERS, " +
+                acc1Y + " * Path.TO_METERS)\n);\n\n" +
+                "Path path = new Path(parametric, \n    " + maxAcc + " * Path.TO_METERS, " + maxDec + " * Path.TO_METERS, \n    "
+                + maxVel + " * Path.TO_METERS, " + maxAngVel + " * Path.TO_METERS, \n    " + stVel + " * Path.TO_METERS, " + endVel + " * Path.TO_METERS\n);");
+
+        return 0;
     }
 
     public void run(Pose2D startPosition, double END_TIME) {
@@ -486,14 +597,21 @@ public class PathVisualizer {
         l2.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 24));
         l2.setBounds(ADJUST_FRAME_WIDTH/2 + 50, 30, ADJUST_FRAME_WIDTH/2-50, 30);
 
+        adjustComponent.add(l2);
+
         updateButton = new JButton("Update");
         updateButton.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 24));
-        updateButton.setBounds(ADJUST_FRAME_WIDTH/2-100, ADJUST_FRAME_HEIGHT-70, 200, 50);
+        updateButton.setBounds(ADJUST_FRAME_WIDTH/2-210, ADJUST_FRAME_HEIGHT-70, 200, 50);
         updateButton.addActionListener(e -> update());
 
         adjustComponent.add(updateButton);
 
-        adjustComponent.add(l2);
+        exportButton = new JButton("Export");
+        exportButton.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 24));
+        exportButton.setBounds(ADJUST_FRAME_WIDTH/2 + 10, ADJUST_FRAME_HEIGHT-70, 200, 50);
+        exportButton.addActionListener(e -> exportPath());
+
+        adjustComponent.add(exportButton);
 
         updateAdjustFrame();
 

@@ -2,6 +2,7 @@ package visualiser;
 
 import math.Point2D;
 import math.Pose2D;
+import math.Vector2D;
 import path.Path;
 import splines.QuinticHermiteSpline;
 
@@ -10,22 +11,25 @@ import java.text.DecimalFormat;
 public class Test {
     public static void main(String[] args) {
         QuinticHermiteSpline spline = new QuinticHermiteSpline(
-                new Pose2D(100 * Path.TO_METERS, 50 * Path.TO_METERS, 1.3),
-                new Pose2D(-200 * Path.TO_METERS, 50 * Path.TO_METERS, -1.3)
+                new Pose2D(100 * Path.TO_METERS, 50 * Path.TO_METERS, 74.4845 * Math.PI/180),
+                new Pose2D(-200 * Path.TO_METERS, 50 * Path.TO_METERS, -74.4845 * Math.PI/180),
+                new Vector2D(80.2496 * Path.TO_METERS, 289.0675 * Path.TO_METERS),
+                new Vector2D(80.2496 * Path.TO_METERS, -289.0675 * Path.TO_METERS),
+                new Vector2D(0 * Path.TO_METERS, 0 * Path.TO_METERS),
+                new Vector2D(0 * Path.TO_METERS, 0 * Path.TO_METERS)
         );
 
         DecimalFormat df = new DecimalFormat();
         df.setMaximumFractionDigits(4);
         df.setMinimumFractionDigits(4);
 
-        for(double t = 0; t <= 1; t+=0.01) {
-            Point2D point = spline.getPoint(t);
-            System.out.print("(" + df.format(point.getX()) + ", " + df.format(point.getY()) + "), ");
-        }
-        System.out.println();
-        Path path = new Path(spline, 80 * Path.TO_METERS, 80 * Path.TO_METERS, 50 * Path.TO_METERS, 20 * Path.TO_METERS, 0 * Path.TO_METERS, 0);
+//        for(double t = 0; t <= 1; t+=0.01) {
+//            Point2D point = spline.getPoint(t);
+//            System.out.print("(" + df.format(point.getX()) + ", " + df.format(point.getY()) + "), ");
+//        }
+//        System.out.println();
 
-//        Pose2D robotPosition = new Pose2D(0, 0, 0);
+        Path path = new Path(spline, 80 * Path.TO_METERS, 80 * Path.TO_METERS, 50 * Path.TO_METERS, 20 * Path.TO_METERS, 0 * Path.TO_METERS, 0 * Path.TO_METERS);
 
 
         double trackwidth = 25 * 0.0254;
