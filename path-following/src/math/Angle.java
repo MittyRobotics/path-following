@@ -8,7 +8,7 @@ public class Angle {
     }
 
     public Angle(double x, double y) {
-        radians = Math.atan2(y, x);
+        this(Math.atan2(y, x));
     }
 
     public Angle(double radians) {
@@ -37,5 +37,10 @@ public class Angle {
 
     public void print() {
         System.out.println(radians + " Radians");
+    }
+
+    public double getAngleBetween(Angle other) {
+        double phi = Math.abs(this.radians - other.radians) % (2*Math.PI);
+        return phi > Math.PI ? 2*Math.PI - phi : phi;
     }
 }

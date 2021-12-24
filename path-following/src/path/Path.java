@@ -6,18 +6,18 @@ import splines.Parametric;
 import java.util.ArrayList;
 
 public class Path {
-    private Parametric parametric;
+    protected Parametric parametric;
 
-    private double maxAcceleration, maxVelocity, startVelocity, endVelocity, maxDeceleration, maxAngularVelocity;
+    protected double maxAcceleration, maxVelocity, startVelocity, endVelocity, maxDeceleration, maxAngularVelocity;
 
     public static final double TO_METERS = 0.0254;
     public static final double TO_INCHES = 39.3700787401;
 
-    private double prevVelocity, distanceTraveled, closestPointT, distanceToEnd, maxVelocityToEnd, velocity, purePursuitRadius;
-    boolean turnRight;
-    Circle tangentCircle = new Circle();
-    Point2D lookaheadPoint = new Point2D();
-    private ArrayList<Vector2D> previewVelocities = new ArrayList<>();
+    protected double prevVelocity, distanceTraveled, closestPointT, distanceToEnd, maxVelocityToEnd, velocity, purePursuitRadius;
+    protected boolean turnRight;
+    protected Circle tangentCircle = new Circle();
+    protected Point2D lookaheadPoint = new Point2D();
+    protected ArrayList<Vector2D> previewVelocities = new ArrayList<>();
 
     public Path(Parametric parametric, double maxAcceleration, double maxDeceleration, double maxVelocity, double maxAngularVelocity, double startVelocity, double endVelocity) {
         this.parametric = parametric;
@@ -29,6 +29,8 @@ public class Path {
 
         this.startVelocity = startVelocity;
         this.prevVelocity = startVelocity;
+
+        distanceToEnd = parametric.getLength();
     }
 
     public Path(Parametric parametric, double maxAcceleration, double maxVelocity, double startVelocity, double endVelocity) {
@@ -45,7 +47,7 @@ public class Path {
 
         lookaheadPoint = getLookahead(distanceTraveled, lookahead);
 
-        distanceToEnd = parametric.getLength() - distanceTraveled - (prevVelocity - maxDeceleration * dt) * dt - end_threshold * 0.8;
+        distanceToEnd = parametric.getLength() - distanceTraveled - (prevVelocity - maxDeceleration * dt) * dt - end_threshold;
 
         maxVelocityToEnd = maxVelocityFromDistance(distanceToEnd, endVelocity, maxDeceleration);
 
@@ -95,7 +97,7 @@ public class Path {
     }
 
     public DifferentialDriveState update(Pose2D robotPose, double dt, double lookahead, double end_threshold, double trackwidth) {
-        return update(robotPose, dt, lookahead, end_threshold, 5*Path.TO_METERS, 10, trackwidth);
+        return update(robotPose, dt, lookahead, end_threshold, 5*Path.TO_METERS, 30, trackwidth);
     }
 
     public double getMaxVelocityFromPreviews() {
@@ -146,7 +148,7 @@ public class Path {
     }
 
     public boolean isFinished(Pose2D robotPosition, double threshold) {
-        return robotPosition.getPosition().distance(parametric.getPoint(1.0)) <= threshold;
+        return (robotPosition.getPosition().distance(parametric.getPoint(1.0)) <= threshold) || distanceToEnd <= 0;
     }
 
     public Point2D getLookahead(double distanceTraveled, double lookahead) {

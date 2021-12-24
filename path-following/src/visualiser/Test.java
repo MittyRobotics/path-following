@@ -4,6 +4,7 @@ import math.Point2D;
 import math.Pose2D;
 import math.Vector2D;
 import path.Path;
+import path.RamsetePath;
 import splines.QuinticHermiteSpline;
 
 import java.text.DecimalFormat;
@@ -11,12 +12,8 @@ import java.text.DecimalFormat;
 public class Test {
     public static void main(String[] args) {
         QuinticHermiteSpline spline = new QuinticHermiteSpline(
-                new Pose2D(100 * Path.TO_METERS, 50 * Path.TO_METERS, 74.4845 * Math.PI/180),
-                new Pose2D(-200 * Path.TO_METERS, 50 * Path.TO_METERS, -74.4845 * Math.PI/180),
-                new Vector2D(80.2496 * Path.TO_METERS, 289.0675 * Path.TO_METERS),
-                new Vector2D(80.2496 * Path.TO_METERS, -289.0675 * Path.TO_METERS),
-                new Vector2D(0 * Path.TO_METERS, 0 * Path.TO_METERS),
-                new Vector2D(0 * Path.TO_METERS, 0 * Path.TO_METERS)
+                new Pose2D(100 * Path.TO_METERS, 50 * Path.TO_METERS, 90 * Math.PI/180),
+                new Pose2D(-200 * Path.TO_METERS, 50 * Path.TO_METERS, 90 * Math.PI/180)
         );
 
         DecimalFormat df = new DecimalFormat();
@@ -38,5 +35,17 @@ public class Test {
         PathVisualizer visualizer = new PathVisualizer(path, 10*Path.TO_METERS, 1*Path.TO_METERS, 3*Path.TO_METERS, 30, trackwidth, tracklength);
 
         visualizer.run();
+
+//        RamsetePath path = new RamsetePath(spline, 80 * Path.TO_METERS, 80 * Path.TO_METERS, 50 * Path.TO_METERS, 20 * Path.TO_METERS, 0 * Path.TO_METERS, 0 * Path.TO_METERS);
+//
+//        double trackwidth = 25 * 0.0254;
+//        double tracklength = 37 * 0.0254;
+//
+//        double b = 2;
+//        double Z = 0.2;
+//
+//        RamsetePathVisualizer visualizer = new RamsetePathVisualizer(path, 1*Path.TO_METERS, 3*Path.TO_METERS, 30, trackwidth, tracklength, b, Z, 0.02);
+//
+//        visualizer.run();
     }
 }
