@@ -61,6 +61,8 @@ public class RamsetePath extends Path {
 
             parametric = parametric.getNewPath(robotPose, curVel, curAcc);
 
+            distanceToEnd = parametric.getLength();
+
         }
 
         return RamseteController.ramsete(robotPose, desiredPose, velocity, velocity * getCurvature(closestPointT), b, Z, trackwidth);

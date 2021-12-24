@@ -89,6 +89,8 @@ public class Path {
 
             parametric = parametric.getNewPath(robotPose, curVel, curAcc);
 
+            distanceToEnd = parametric.getLength();
+
         }
 
         return PurePursuitController.purePursuit(purePursuitRadius, velocity, turnRight, trackwidth);
