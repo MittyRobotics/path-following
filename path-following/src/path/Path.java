@@ -47,11 +47,7 @@ public class Path {
 
         lookaheadPoint = getLookahead(distanceTraveled, lookahead);
 
-        distanceToEnd = parametric.getLength() - distanceTraveled - (prevVelocity - maxDeceleration * dt) * dt - end_threshold;
-
-        maxVelocityToEnd = maxVelocityFromDistance(distanceToEnd, endVelocity, maxDeceleration);
-
-        velocity = Math.min(Math.min(prevVelocity + maxAcceleration * dt, maxVelocityToEnd), maxVelocity);
+        velocity = Math.min(prevVelocity + maxAcceleration * dt, maxVelocity);
 
         double previewDistance = distanceToSlowdown(prevVelocity, 0, maxDeceleration);
         double previewT = parametric.getTFromLength(distanceTraveled + previewDistance);
@@ -69,6 +65,12 @@ public class Path {
 
             velocity = Math.min(velocity, maxCurvatureVelocity);
         }
+
+        distanceToEnd = parametric.getLength() - distanceTraveled - (velocity * dt) - end_threshold;
+
+        maxVelocityToEnd = maxVelocityFromDistance(distanceToEnd, endVelocity, maxDeceleration);
+
+        velocity = Math.min(velocity, maxVelocityToEnd);
 
         velocity = Math.max(prevVelocity - maxDeceleration * dt, velocity);
 
