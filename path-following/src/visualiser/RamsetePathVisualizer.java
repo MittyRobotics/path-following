@@ -27,12 +27,15 @@ public class RamsetePathVisualizer {
     private double b;
     private double Z;
     private double cur_time;
-    private Pose2D robotPosition;
+    private double END_TIME;
+    private Pose2D robotPosition, startPosition;
 
     private double METERS_TO_PIXELS;
     private int TITLE_HEIGHT;
     private int FRAME_HEIGHT;
     private int FRAME_WIDTH;
+    private int ADJUST_FRAME_HEIGHT;
+    private int ADJUST_FRAME_WIDTH;
     private int NEWTONS_STEPS;
     private final ArrayList<Pose2D> robotPoses = new ArrayList<>();
     private final ArrayList<Vector2D> velocities = new ArrayList<>();
@@ -54,11 +57,14 @@ public class RamsetePathVisualizer {
     private final ArrayList<Double> td = new ArrayList<>();
 
     private int cur_pos_index = 0;
-    private JFrame frame;
-    private JComponent component;
-    private JButton runSimButton;
+    private JFrame frame, adjustFrame;
+    private JComponent component, adjustComponent;
+    private JButton runSimButton, adjustButton, updateButton, exportButton;
     private JSlider timeSlider;
     private ScheduledExecutorService executorService;
+    private JTextField[] rightFields, leftFields;
+    private final String[] rightLabels = {"Max Acceleration", "Max Deceleration", "Max Velocity", "Max Angular Vel.", "Start Velocity", "End Velocity", "Start Position X", "Start Position Y", "Start Angle", "b", "Z", "End Threshold", "Adjust Threshold", "Newton's Steps"};
+    private final String[] leftLabels = {"Pose 0 X", "Pose 0 Y", "Pose 0 Angle", "Pose 1 X", "Pose 1 Y", "Pose 1 Angle", "Velocity 0 X", "Velocity 0 Y", "Velocity 1 X", "Velocity 1 Y", "Acceleration 0 X", "Acceleration 0 Y", "Acceleration 1 X", "Acceleration 1 Y"};
 
     boolean simulating = false;
 
@@ -264,8 +270,166 @@ public class RamsetePathVisualizer {
         }
     }
 
+    public void updateAdjustFrame() {
+        DecimalFormat df = new DecimalFormat();
+        df.setMaximumFractionDigits(4);
+
+        rightFields[0].setText(df.format(path.getMaxAcceleration() * Path.TO_INCHES));
+        rightFields[1].setText(df.format(path.getMaxDeceleration() * Path.TO_INCHES));
+        rightFields[2].setText(df.format(path.getMaxVelocity() * Path.TO_INCHES));
+        rightFields[3].setText(df.format(path.getMaxAngularVelocity() * Path.TO_INCHES));
+        rightFields[4].setText(df.format(path.getStartVelocity() * Path.TO_INCHES));
+        rightFields[5].setText(df.format(path.getEndVelocity() * Path.TO_INCHES));
+        rightFields[6].setText(df.format(startPosition.getPosition().x * Path.TO_INCHES));
+        rightFields[7].setText(df.format(startPosition.getPosition().y * Path.TO_INCHES));
+        rightFields[8].setText(df.format(startPosition.getAngleRadians() * 180 / Math.PI));
+        rightFields[9].setText(df.format(b));
+        rightFields[10].setText(df.format(Z));
+        rightFields[11].setText(df.format(END_THRESHOLD * Path.TO_INCHES));
+        rightFields[12].setText(df.format(ADJUST_THRESHOLD * Path.TO_INCHES));
+        rightFields[13].setText(df.format(NEWTONS_STEPS));
+
+        leftFields[0].setText(df.format(path.getParametric().getPoint(0).x * Path.TO_INCHES));
+        leftFields[1].setText(df.format(path.getParametric().getPoint(0).y * Path.TO_INCHES));
+        leftFields[2].setText(df.format(path.getParametric().getAngle(0).getAngle() * 180 / Math.PI));
+        leftFields[3].setText(df.format(path.getParametric().getPoint(1).x * Path.TO_INCHES));
+        leftFields[4].setText(df.format(path.getParametric().getPoint(1).y * Path.TO_INCHES));
+        leftFields[5].setText(df.format(path.getParametric().getAngle(1).getAngle() * 180 / Math.PI));
+        leftFields[6].setText(df.format(path.getParametric().getDerivative(0, 1).x * Path.TO_INCHES));
+        leftFields[7].setText(df.format(path.getParametric().getDerivative(0, 1).y * Path.TO_INCHES));
+        leftFields[8].setText(df.format(path.getParametric().getDerivative(1, 1).x * Path.TO_INCHES));
+        leftFields[9].setText(df.format(path.getParametric().getDerivative(1, 1).y * Path.TO_INCHES));
+        leftFields[10].setText(df.format(path.getParametric().getDerivative(0, 2).x * Path.TO_INCHES));
+        leftFields[11].setText(df.format(path.getParametric().getDerivative(0, 2).y * Path.TO_INCHES));
+        leftFields[12].setText(df.format(path.getParametric().getDerivative(1, 2).x * Path.TO_INCHES));
+        leftFields[13].setText(df.format(path.getParametric().getDerivative(1, 2).y * Path.TO_INCHES));
+
+    }
+
+    public void submitAdjustFrame() {
+
+        String pose0X = leftFields[0].getText();
+        String pose0Y = leftFields[1].getText();
+        String pose0Angle = leftFields[2].getText();
+        String pose1X = leftFields[3].getText();
+        String pose1Y = leftFields[4].getText();
+        String pose1Angle = leftFields[5].getText();
+        String vel0X = leftFields[6].getText();
+        String vel0Y = leftFields[7].getText();
+        String vel1X = leftFields[8].getText();
+        String vel1Y = leftFields[9].getText();
+        String acc0X = leftFields[10].getText();
+        String acc0Y = leftFields[11].getText();
+        String acc1X = leftFields[12].getText();
+        String acc1Y = leftFields[13].getText();
+
+        Parametric newParametric = new QuinticHermiteSpline(new Pose2D(returnNumber(pose0X) * Path.TO_METERS, returnNumber(pose0Y) * Path.TO_METERS, returnNumber(pose0Angle) * Math.PI / 180),
+                new Pose2D(returnNumber(pose1X) * Path.TO_METERS, returnNumber(pose1Y) * Path.TO_METERS, returnNumber(pose1Angle) * Math.PI / 180),
+                new Vector2D(returnNumber(vel0X) * Path.TO_METERS, returnNumber(vel0Y) * Path.TO_METERS), new Vector2D(returnNumber(vel1X) * Path.TO_METERS, returnNumber(vel1Y) * Path.TO_METERS),
+                new Vector2D(returnNumber(acc0X) * Path.TO_METERS, returnNumber(acc0Y) * Path.TO_METERS), new Vector2D(returnNumber(acc1X) * Path.TO_METERS, returnNumber(acc1Y) * Path.TO_METERS));
+
+        String maxAcc = rightFields[0].getText();
+        String maxDec = rightFields[1].getText();
+        String maxVel = rightFields[2].getText();
+        String maxAngVel = rightFields[3].getText();
+        String stVel = rightFields[4].getText();
+        String endVel = rightFields[5].getText();
+        String startX = rightFields[6].getText();
+        String startY = rightFields[7].getText();
+        String startAng = rightFields[8].getText();
+
+        this.startPosition = new Pose2D(returnNumber(startX) * Path.TO_METERS, returnNumber(startY) * Path.TO_METERS, returnNumber(startAng) * Math.PI / 180);
+
+        path = new RamsetePath(newParametric, returnNumber(maxAcc) * Path.TO_METERS, returnNumber(maxDec) * Path.TO_METERS, returnNumber(maxVel) * Path.TO_METERS,
+                returnNumber(maxAngVel) * Path.TO_METERS, returnNumber(stVel) * Path.TO_METERS, returnNumber(endVel) * Path.TO_METERS);
+
+        b = returnNumber(rightFields[9].getText());
+        Z = returnNumber(rightFields[10].getText());
+        END_THRESHOLD = returnNumber(rightFields[11].getText()) * Path.TO_METERS;
+        ADJUST_THRESHOLD = returnNumber(rightFields[12].getText()) * Path.TO_METERS;
+        NEWTONS_STEPS = Integer.parseInt(rightFields[13].getText());
+    }
+
+    public int checkAll() {
+        for(int i = 0; i < leftFields.length; i++) {
+            if(checkAdjust(i, leftFields[i].getText(), false) == 1) {
+                JOptionPane.showMessageDialog(adjustComponent, leftLabels[i] + " must be a number");
+                return -1;
+            }
+        }
+
+        for(int i = 0; i < rightFields.length; i++) {
+            if(i == 13) {
+                try {
+                    Integer.parseInt(rightFields[i].getText());
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(adjustComponent, rightLabels[i] + " must be an integer");
+                    return -1;
+                }
+            }
+            if(checkAdjust(i, rightFields[i].getText(), true) == 1) {
+                JOptionPane.showMessageDialog(adjustComponent, rightLabels[i] + " must be a number");
+                return -1;
+            } else if (checkAdjust(i, rightFields[i].getText(), true) == 2 && i != 6 && i != 7) {
+                JOptionPane.showMessageDialog(adjustComponent, rightLabels[i] + " must be positive");
+                return -1;
+            }
+            if(i == 10) {
+                if(returnNumber(rightFields[i].getText()) >= 1 || returnNumber(rightFields[i].getText()) <= 0) {
+                    JOptionPane.showMessageDialog(adjustComponent, rightLabels[i] + " must be on the interval (0, 1)");
+                    return -1;
+                }
+            }
+        }
+        return 0;
+    }
+
+    public int checkAdjust(int i, String s, boolean pos) {
+        try {
+            double d = Double.parseDouble(s);
+            if(pos) {
+                if(d < 0) {
+                    return 2;
+                }
+            }
+            return 0;
+        } catch (Exception e) {
+            return 1;
+        }
+    }
+
     public double returnNumber(String s) {
         return Double.parseDouble(s);
+    }
+
+    public void toggleAdjustFrame() {
+        adjustFrame.setVisible(!adjustFrame.isVisible());
+    }
+
+    public int update() {
+
+        if(checkAll() != 0) {
+            return -1;
+        }
+
+        submitAdjustFrame();
+
+        simulate(startPosition, END_TIME);
+
+        toggleAdjustFrame();
+
+        component.remove(timeSlider);
+        timeSlider.setValue(0);
+
+        updateTimeSlider();
+
+        cur_pos_index = 0;
+        simulating = false;
+        runSimButton.setText("RUN SIM");
+
+        component.updateUI();
+
+        return 0;
     }
 
     private void updateTimeSlider() {
@@ -282,13 +446,19 @@ public class RamsetePathVisualizer {
 
     public void run(Pose2D startPosition, double END_TIME) {
 
+        this.startPosition = startPosition;
+        this.END_TIME = END_TIME;
+
         simulate(startPosition, END_TIME);
+
 
         frame = new JFrame();
 
         TITLE_HEIGHT = 28;
         FRAME_WIDTH = 800;
         FRAME_HEIGHT = 800;
+        ADJUST_FRAME_HEIGHT = 730;
+        ADJUST_FRAME_WIDTH = 800;
 
         frame.setSize(FRAME_WIDTH+400, FRAME_HEIGHT + TITLE_HEIGHT);
         frame.setResizable(false);
@@ -309,6 +479,72 @@ public class RamsetePathVisualizer {
 
         frame.setVisible(true);
 
+        adjustFrame = new JFrame();
+        adjustFrame.setSize(ADJUST_FRAME_WIDTH, ADJUST_FRAME_HEIGHT+TITLE_HEIGHT);
+        adjustFrame.setResizable(false);
+        adjustFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+
+        adjustComponent = new JPanel();
+
+        adjustComponent.setLayout(null);
+        adjustFrame.add(adjustComponent);
+
+        rightFields = new JTextField[rightLabels.length];
+
+        for(int i = 0; i < rightLabels.length; i++) {
+            rightFields[i] = new JTextField();
+            rightFields[i].setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
+
+            rightFields[i].setBounds(ADJUST_FRAME_WIDTH * 3 / 4 + 10, 80 + 40 * (i), ADJUST_FRAME_WIDTH/4 - 80, 35);
+
+            JLabel label = new JLabel(rightLabels[i], JLabel.RIGHT);
+            label.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
+            label.setBounds(ADJUST_FRAME_WIDTH * 1 / 2 + 10, 80 + 40 * (i), ADJUST_FRAME_WIDTH / 4 - 20, 35);
+
+            adjustComponent.add(label);
+            adjustComponent.add(rightFields[i]);
+        }
+
+        leftFields = new JTextField[leftLabels.length];
+
+        for(int i = 0; i < leftFields.length; i++) {
+            leftFields[i] = new JTextField();
+            leftFields[i].setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
+
+            leftFields[i].setBounds(ADJUST_FRAME_WIDTH * 1 / 4 + 50, 80 + 40 * (i), ADJUST_FRAME_WIDTH/4 - 80, 35);
+
+
+            JLabel label = new JLabel(leftLabels[i], JLabel.RIGHT);
+            label.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
+            label.setBounds(50, 80 + 40 * (i), ADJUST_FRAME_WIDTH / 4 - 20, 35);
+
+            adjustComponent.add(label);
+            adjustComponent.add(leftFields[i]);
+        }
+
+        JLabel l1 = new JLabel("Adjust Spline", JLabel.LEFT);
+        l1.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 24));
+        l1.setBounds(50, 30, ADJUST_FRAME_WIDTH/2-50, 30);
+
+        adjustComponent.add(l1);
+
+        JLabel l2 = new JLabel("Adjust Path", JLabel.LEFT);
+        l2.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 24));
+        l2.setBounds(ADJUST_FRAME_WIDTH/2 + 50, 30, ADJUST_FRAME_WIDTH/2-50, 30);
+
+        adjustComponent.add(l2);
+
+        updateButton = new JButton("Update");
+        updateButton.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 24));
+        updateButton.setBounds(ADJUST_FRAME_WIDTH/2-210, ADJUST_FRAME_HEIGHT-70, 200, 50);
+        updateButton.addActionListener(e -> update());
+
+        adjustComponent.add(updateButton);
+
+        updateAdjustFrame();
+
+        adjustFrame.setVisible(false);
+
 
         runSimButton = new JButton("RUN SIM");
         runSimButton.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
@@ -318,6 +554,13 @@ public class RamsetePathVisualizer {
         component.add(runSimButton);
 
         updateTimeSlider();
+
+        adjustButton = new JButton("Adjust Path");
+        adjustButton.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
+        adjustButton.setBounds(FRAME_WIDTH-175, 5, 150, 40);
+        adjustButton.addActionListener(e -> toggleAdjustFrame());
+
+        component.add(adjustButton);
 
 
         Runnable simRunnable = () -> {
