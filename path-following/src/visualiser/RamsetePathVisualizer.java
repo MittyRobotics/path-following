@@ -398,6 +398,103 @@ public class RamsetePathVisualizer {
         }
     }
 
+    public int exportPath() {
+
+        if(checkAll() != 0) {
+            return -1;
+        }
+
+        String pose0X = leftFields[0].getText();
+        String pose0Y = leftFields[1].getText();
+        String pose0Angle = leftFields[2].getText();
+        String pose1X = leftFields[3].getText();
+        String pose1Y = leftFields[4].getText();
+        String pose1Angle = leftFields[5].getText();
+        String vel0X = leftFields[6].getText();
+        String vel0Y = leftFields[7].getText();
+        String vel1X = leftFields[8].getText();
+        String vel1Y = leftFields[9].getText();
+        String acc0X = leftFields[10].getText();
+        String acc0Y = leftFields[11].getText();
+        String acc1X = leftFields[12].getText();
+        String acc1Y = leftFields[13].getText();
+
+        Parametric newParametric = new QuinticHermiteSpline(new Pose2D(returnNumber(pose0X) * Path.TO_METERS, returnNumber(pose0Y) * Path.TO_METERS, returnNumber(pose0Angle) * Math.PI / 180),
+                new Pose2D(returnNumber(pose1X) * Path.TO_METERS, returnNumber(pose1Y) * Path.TO_METERS, returnNumber(pose1Angle) * Math.PI / 180),
+                new Vector2D(returnNumber(vel0X) * Path.TO_METERS, returnNumber(vel0Y) * Path.TO_METERS), new Vector2D(returnNumber(vel1X) * Path.TO_METERS, returnNumber(vel1Y) * Path.TO_METERS),
+                new Vector2D(returnNumber(acc0X) * Path.TO_METERS, returnNumber(acc0Y) * Path.TO_METERS), new Vector2D(returnNumber(acc1X) * Path.TO_METERS, returnNumber(acc1Y) * Path.TO_METERS));
+
+        String maxAcc = rightFields[0].getText();
+        String maxDec = rightFields[1].getText();
+        String maxVel = rightFields[2].getText();
+        String maxAngVel = rightFields[3].getText();
+        String stVel = rightFields[4].getText();
+        String endVel = rightFields[5].getText();
+        String startX = rightFields[6].getText();
+        String startY = rightFields[7].getText();
+        String startAng = rightFields[8].getText();
+
+        this.startPosition = new Pose2D(returnNumber(startX) * Path.TO_METERS, returnNumber(startY) * Path.TO_METERS, returnNumber(startAng) * Math.PI / 180);
+
+        path = new RamsetePath(newParametric, returnNumber(maxAcc) * Path.TO_METERS, returnNumber(maxDec) * Path.TO_METERS, returnNumber(maxVel) * Path.TO_METERS,
+                returnNumber(maxAngVel) * Path.TO_METERS, returnNumber(stVel) * Path.TO_METERS, returnNumber(endVel) * Path.TO_METERS);
+
+        b = returnNumber(rightFields[9].getText());
+        Z = returnNumber(rightFields[10].getText());
+        END_THRESHOLD = returnNumber(rightFields[11].getText()) * Path.TO_METERS;
+        ADJUST_THRESHOLD = returnNumber(rightFields[12].getText()) * Path.TO_METERS;
+        NEWTONS_STEPS = Integer.parseInt(rightFields[13].getText());
+
+
+
+        JFrame exportFrame = new JFrame();
+        exportFrame.setSize(1000, 500 + TITLE_HEIGHT);
+        exportFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        exportFrame.setResizable(false);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(null);
+
+        JTextArea f = new JTextArea();
+        f.setEditable(false);
+        f.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
+        f.setBounds(20, 20, 960, 460);
+        f.setBackground(null);
+        f.setBorder(null);
+        f.setLineWrap(true);
+        f.setWrapStyleWord(true);
+        f.setText(
+                "private double b = " + rightFields[9].getText() + ";\n" + "private double Z = " + rightFields[10].getText() + ";\nprivate double END_THRESHOLD = " + rightFields[11].getText() + " * Path.TO_METERS;\n" +
+                "private double ADJUST_THRESHOLD = " + rightFields[12].getText() + " * Path.TO_METERS;\nprivate int NEWTON_STEPS = " + NEWTONS_STEPS + ";\n\n" +
+                "QuinticHermiteSpline parametric = new QuinticHermiteSpline(\n    new Pose2D(" + pose0X + " * Path.TO_METERS, " +
+                pose0Y + " * Path.TO_METERS, " + pose0Angle + " * Math.PI/180), \n    new Pose2D(" + pose1X + " * Path.TO_METERS, " +
+                pose1Y + " * Path.TO_METERS, " + pose1Angle + " * Math.PI/180), \n    new Vector2D(" + vel0X + " * Path.TO_METERS, " +
+                vel0Y + " * Path.TO_METERS), \n    new Vector2D(" + vel1X + " * Path.TO_METERS, " + vel1Y + " * Path.TO_METERS), \n    new Vector2D(" +
+                acc0X + " * Path.TO_METERS, " + acc0Y + " * Path.TO_METERS), \n    new Vector2D(" + acc1X + " * Path.TO_METERS, " +
+                acc1Y + " * Path.TO_METERS)\n);\n\n" +
+                "RamsetePath path = new RamsetePath(parametric, \n    " + maxAcc + " * Path.TO_METERS, " + maxDec + " * Path.TO_METERS, \n    "
+                + maxVel + " * Path.TO_METERS, " + maxAngVel + " * Path.TO_METERS, \n    " + stVel + " * Path.TO_METERS, " + endVel + " * Path.TO_METERS\n);"
+        );
+        panel.add(f);
+
+        exportFrame.add(panel);
+
+        exportFrame.setVisible(true);
+
+        System.out.println("private double b = " + rightFields[9].getText() + ";\n" + "private double Z = " + rightFields[10].getText() + ";\nprivate double END_THRESHOLD = " + rightFields[11].getText() + " * Path.TO_METERS;\n" +
+                "private double ADJUST_THRESHOLD = " + rightFields[12].getText() + " * Path.TO_METERS;\nprivate int NEWTON_STEPS = " + NEWTONS_STEPS + ";\n\n" +
+                "QuinticHermiteSpline parametric = new QuinticHermiteSpline(\n    new Pose2D(" + pose0X + " * Path.TO_METERS, " +
+                pose0Y + " * Path.TO_METERS, " + pose0Angle + " * Math.PI/180), \n    new Pose2D(" + pose1X + " * Path.TO_METERS, " +
+                pose1Y + " * Path.TO_METERS, " + pose1Angle + " * Math.PI/180), \n    new Vector2D(" + vel0X + " * Path.TO_METERS, " +
+                vel0Y + " * Path.TO_METERS), \n    new Vector2D(" + vel1X + " * Path.TO_METERS, " + vel1Y + " * Path.TO_METERS), \n    new Vector2D(" +
+                acc0X + " * Path.TO_METERS, " + acc0Y + " * Path.TO_METERS), \n    new Vector2D(" + acc1X + " * Path.TO_METERS, " +
+                acc1Y + " * Path.TO_METERS)\n);\n\n" +
+                "RamsetePath path = new RamsetePath(parametric, \n    " + maxAcc + " * Path.TO_METERS, " + maxDec + " * Path.TO_METERS, \n    "
+                + maxVel + " * Path.TO_METERS, " + maxAngVel + " * Path.TO_METERS, \n    " + stVel + " * Path.TO_METERS, " + endVel + " * Path.TO_METERS\n);");
+
+        return 0;
+    }
+
     public double returnNumber(String s) {
         return Double.parseDouble(s);
     }
@@ -561,6 +658,13 @@ public class RamsetePathVisualizer {
         adjustButton.addActionListener(e -> toggleAdjustFrame());
 
         component.add(adjustButton);
+
+        exportButton = new JButton("Export");
+        exportButton.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 24));
+        exportButton.setBounds(ADJUST_FRAME_WIDTH/2 + 10, ADJUST_FRAME_HEIGHT-70, 200, 50);
+        exportButton.addActionListener(e -> exportPath());
+
+        adjustComponent.add(exportButton);
 
 
         Runnable simRunnable = () -> {
