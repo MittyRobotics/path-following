@@ -1,34 +1,63 @@
-package splines;
-
-import math.Angle;
-import math.Point2D;
-import math.Pose2D;
-import math.Vector2D;
+package pathfollowing;
 
 public class Parametric {
+    /**
+     * Length of the parametric
+     */
     protected double length;
 
+    /**
+     * Returns the {@link Point2D} at t
+     * @param t t to get associated {@link Point2D}
+     * @return {@link Point2D} at t
+     */
     public Point2D getPoint(double t) {
         return new Point2D();
     }
 
+    /**
+     * Returns the {@link Angle} at t
+     * @param t t to get associated {@link Angle}
+     * @return {@link Angle} at t
+     */
     public Angle getAngle(double t) {
         return new Angle();
     }
 
+    /**
+     * Returns the total length of the parametric
+     * @return the total length of the parametric
+     */
     public double getLength() {
         return length;
     }
 
+    /**
+     * Returns the {@link Pose2D} at t
+     * @param t t to get associated {@link Pose2D}
+     * @return {@link Pose2D} at t
+     */
     public Pose2D getPose(double t) {
         return new Pose2D();
     }
 
+    /**
+     * Returns the nth derivative as a {@link Point2D} at t
+     * @param t t to get associated nth derivative
+     * @param n degree of the derivative
+     * @return the nth derivative as a {@link Point2D} at t
+     */
     public Point2D getDerivative(double t, int n) {
         return new Point2D();
     }
 
+    /**
+     * Returns an array of the nth Legendre-Gauss coefficients (first column is weights, second column is points)
+     * @param n degree of the coefficients
+     * @return double array of the nth Legendre-Gauss coefficients
+     */
     public double[][] getCoefficients(int n) {
+        //Source: https://pomax.github.io/bezierinfo/legendre-gauss.html
         switch (n) {
             case 2:
                 return new double[][] {
@@ -300,39 +329,64 @@ public class Parametric {
         return new double[][]{};
     }
 
-
+    /**
+     * Returns the Gaussian quadrature length of the parametric from a start to end t parameter
+     * @param start t parameter to start length calculation
+     * @param end t parameter to end length calculation
+     * @param steps number of steps (degree) of quadrature
+     * @return the Gaussian quadrature length of the parametric from a start to end t parameter
+     */
     public double getGaussianQuadratureLength(double start, double end, int steps) {
-        //https://pomax.github.io/bezierinfo/legendre-gauss.html
-        //first row are weights, second row are points
         double[][] coefficients = getCoefficients(steps);
 
-        // we are trying to find integral of sqrt(x'(t)^2 + y'(t)^2) from 0 to 1
+        //we are trying to find integral of sqrt(x'(t)^2 + y'(t)^2) from start to end
 
         //integral bound transformation from [0,1] to [-1, 1]
         double half = (end - start) / 2.0;
         double avg = (start + end) / 2.0;
         double length = 0;
-        for (int i = 0; i < coefficients.length; i++) {
+        for (double[] coefficient : coefficients) {
             //sqrt(x'(t)^2 + y'(t)^2)
-            length += getDerivative(avg + half * coefficients[i][1], 1).magnitude() * coefficients[i][0];
+            length += getDerivative(avg + half * coefficient[1], 1).magnitude() * coefficient[0];
         }
         return length * half;
     }
 
+    /**
+     * Returns the Gaussian quadrature length from t=0 to the end t parameter
+     * @param end t parameter to end length calculation
+     * @param steps number of steps (degree) of quadrature
+     * @return the Gaussian quadrature length from t=0 to the end t parameter
+     */
     public double getGaussianQuadratureLength(double end, int steps) {
         return getGaussianQuadratureLength(0, end, steps);
     }
 
-    //use 11 or 17 steps, does not matter much because error is small unless the curvature is very high
+    /**
+     * Returns the Gaussian quadrature length from t=0 to t=1
+     * @param steps number of steps (degree) of quadrature
+     * @return the Gaussian quadrature length from t=0 to t=1
+     */
     public double getGaussianQuadratureLength(int steps) {
         return getGaussianQuadratureLength(1.0, steps);
     }
 
+    /**
+     * Returns the magnitude of the radial acceleration given a curvature and velocity
+     * @param curvature the curvature
+     * @param velocityMagnitude
+     * @return the magnitude of the radial acceleration given a curvature and velocity
+     */
     public double getAccelerationMagnitudeFromCurvature(double curvature, double velocityMagnitude) {
         //a_rad = |V|^2 / R, curvature = 1/R
         return curvature * velocityMagnitude * velocityMagnitude;
     }
 
+    /**
+     * Returns the curvature of the parametric at the given t
+     * @param t t parameter to get curvature of
+     * @return the curvature of the parametric at the given t
+     */
     public double getCurvature(double t) {
         Point2D d1 = getDerivative(t, 1);
         Point2D d2 = getDerivative(t, 2);
@@ -341,79 +395,125 @@ public class Parametric {
         return (d1.getX() * d2.getY() - d2.getX() * d1.getY()) / Math.pow(d1.getX()*d1.getX() + d1.getY()*d1.getY(), 1.5);
     }
 
+    /**
+     * Returns the brute force length of the parametric from t=start to t=end
+     * @param start t parameter to start length calculation
+     * @param end t parameter to end length calculation
+     * @param steps number of steps for length calculations
+     * @return the brute force length of the parametric from t=start to t=end
+     */
     public double getRawLength(double start, double end, double steps) {
         double stepSize = (end - start) / steps;
         double length = 0;
 
+        //number of points = number of steps
         for(double i = start; i <= end; i += stepSize) {
+            //manually calculate distance between consecutive points
             length += getPoint(i).distance(getPoint(i+stepSize));
         }
 
         return length;
     }
 
-
-    //get closest point using Newton's method on each of several initial points defined by steps, goes through a certain number of iterations or until threshold is reached
-    public double findClosestPointOnSpline(Point2D point, double threshold, int steps, int iterations) {
+    /**
+     * Returns the closest associated t value on the spline from a {@link Point2D} using Newton's method on the distance function
+     * @param point the {@link Point2D} that to get closest point from
+     * @param steps the number of steps to start Newton's method from
+     * @param iterations the number of iterations to run Newton's method on a single step
+     * @return the closest associated t value on the spline from a {@link Point2D} using Newton's method on the distance function
+     */
+    public double findClosestPointOnSpline(Point2D point, int steps, int iterations) {
 
         Vector2D cur_min = new Vector2D(Double.POSITIVE_INFINITY, 0);
 
+        //the steps to start Newton's method from
         for(double i = 0; i <= 1; i += 1./steps) {
             double cur_t = i;
+            //get first and secondary derivatives of the distance function at that point
             Vector2D derivs = getDerivsAtT(cur_t, point);
+
+            //amount to adjust according to Newton's method
             double dt = derivs.getX() / derivs.getY();
 
             int counter = 0;
 
-            while(Math.abs(dt) >= threshold && counter < iterations) {
+            //run for certain number of iterations
+            while(counter < iterations) {
+
+                //adjust based on Newton's method, get new derivatives
                 cur_t -= dt;
                 derivs = getDerivsAtT(cur_t, point);
                 dt = derivs.getX() / derivs.getY();
                 counter++;
             }
 
-            if(counter < iterations) {
-                double cur_d = getDistanceAtT(cur_t, point);
+            //if distance is less than previous min, update distance and t
+            double cur_d = getDistanceAtT(cur_t, point);
 
-                if(cur_d < cur_min.getX()) {
-                    cur_min = new Vector2D(cur_d, cur_t);
-                }
+            if(cur_d < cur_min.getX()) {
+                cur_min = new Vector2D(cur_d, cur_t);
             }
         }
 
+        //return t of minimum distance, clamped from 0 to 1
         return Math.min(1, Math.max(0, cur_min.getY()));
 
     }
 
-    //first and second derivative of distance from point to spline at that t
+    /**
+     * Returns the first and second derivatives of the (squared) distance function from a {@link Point2D} to a t on the spline
+     * @param t t value to get distance from on the spline
+     * @param point {@link Point2D} point to get distance from
+     * @return
+     */
     public Vector2D getDerivsAtT(double t, Point2D point) {
-        Point2D p = getPoint(t);
-        Point2D d1 = getDerivative(t, 1);
-        Point2D d2 = getDerivative(t, 2);
+        //D2 = (x1(t) - x2)^2 + (y1(t) - y2)^2
+        //D2' = 2(x1(t) - x2) * (x1'(t)) + 2(y1(t) - y2) * (y1'(t))
+        //D2'' = 2(x1'(t)^2 + (x1(t) - x2)*x1''(t)) + 2(y1'(t)^2 + (y1(t) - y2)*y1''(t))
 
-        double x_a = p.getX() - point.getX();
-        double y_b = p.getY() - point.getY();
+        Point2D p = getPoint(t); //(x1(t), y1(t))
+        Point2D d1 = getDerivative(t, 1); //(x1'(t), y1'(t))
+        Point2D d2 = getDerivative(t, 2); //(x1''(t), y1''(t))
+
+        double x_a = p.getX() - point.getX(); // (x1(t) - x2)
+        double y_b = p.getY() - point.getY(); // (y1(t) - y2)
 
         return new Vector2D(
-                2*(x_a*d1.getX() + y_b*d1.getY()),
-                2*(d1.getX() * d1.getX() + x_a*d2.getX() + d1.getY() * d1.getY() + y_b * d2.getY())
+                2*(x_a*d1.getX() + y_b*d1.getY()), //D2'
+                2*(d1.getX() * d1.getX() + x_a*d2.getX() + d1.getY() * d1.getY() + y_b * d2.getY()) //D2''
         );
     }
 
-    //distance from point to spline at that t
+    /**
+     * Returns the squared distance from the spline at t to a {@link Point2D}
+     * @param t t parameter of the spline to get distance from
+     * @param point {@link Point2D} to get distance to spline from
+     * @return the distance from the spline at t to a {@link Point2D}
+     */
     public double getDistanceAtT(double t, Point2D point) {
         Point2D p = getPoint(t);
+        //D2 = (x1(t) - x2)^2 + (y1(t) - y2)^2
         return (p.getX() - point.getX())*(p.getX() - point.getX()) +
                 (p.getY() - point.getY())*(p.getY() - point.getY());
     }
 
+    /**
+     * Returns the t parameter associated with a certain length from the beginning
+     * @param length length to get the t parameter of
+     * @return the t parameter associated with a certain length from the beginning
+     */
     public double getTFromLength(double length) {
+        //approximate t: desired length divided by total length
         double t = length / this.length;
 
         for(int i = 0; i < 5; i++) {
-            double tangentMagnitude = getDerivative(t, 1).magnitude();
-            if(tangentMagnitude > 0.0) {
-                t -= (getGaussianQuadratureLength(t, 11) - length) / tangentMagnitude;
+            //magnitude of the derivative
+            double derivativeMagnitude = getDerivative(t, 1).magnitude();
+
+            //Newton's method: length remaining length divided by derivative
+            if(derivativeMagnitude > 0.0) {
+                t -= (getGaussianQuadratureLength(t, 11) - length) / derivativeMagnitude;
+                //Clamp to [0, 1]
                 t = Math.min(1, Math.max(t, 0));
             }
         }
@@ -421,24 +521,34 @@ public class Parametric {
         return t;
     }
 
+    /**
+     * Returns a {@link Vector2D} with the maximum x and y coordinates on the path
+     * @param steps number of points to sample
+     * @return a {@link Vector2D} with the maximum x and y coordinates on the path
+     */
     public Vector2D getAbsoluteMaxCoordinates(double steps) {
         Vector2D max = new Vector2D();
 
         double stepsize = 1/steps;
         for(double t = 0; t <= 1; t += stepsize) {
             Point2D point = getPoint(t);
-            max.x = Math.max(max.x, Math.abs(point.getX()));
-            max.y = Math.max(max.y, Math.abs(point.getY()));
+            max.x = Math.max(max.getX(), Math.abs(point.getX()));
+            max.y = Math.max(max.getY(), Math.abs(point.getY()));
         }
 
         return max;
     }
 
-    public Parametric getNewPath(Pose2D newPos, Vector2D newVel, Vector2D newAcc) {
+    /**
+     * Return a new {@link Parametric} path to this parametric's setpoint from a position, velocity, and acceleration
+     * @param newPos {@Pose2D} to start from
+     * @param newVel {@Vector2D} velocity to start from
+     * @param newAcc {@Vector2D} acceleration to start from
+     * @return a new {@link Parametric} path to this parametric's setpoint from a position, velocity, and acceleration
+     */
+    public Parametric getNewPurePursuitPath(Pose2D newPos, Vector2D newVel, Vector2D newAcc) {
         if(this instanceof QuinticHermiteSpline) {
-            if(newVel.getMagnitude() == 0) {
-                return new QuinticHermiteSpline(newPos, ((QuinticHermiteSpline) this).getPose1());
-            }
+            //for quintic hermite splines
             return new QuinticHermiteSpline(newPos, ((QuinticHermiteSpline) this).getPose1(), newVel,
                     ((QuinticHermiteSpline) this).getVelocity1(), newAcc, ((QuinticHermiteSpline) this).getAcceleration1());
         }
