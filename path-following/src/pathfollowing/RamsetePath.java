@@ -55,7 +55,7 @@ public class RamsetePath extends PurePursuitPath { //I know they should both ext
      */
     public DifferentialDriveState update(Pose2D robotPose, double dt, double adjust_threshold, int newtonsSteps, double b, double Z, double trackwidth) {
         //get t associated with closest point on spline
-        closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), newtonsSteps, 10);
+        closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), newtonsSteps, 5);
 
         //get distance traveled
         distanceTraveled = parametric.getGaussianQuadratureLength(closestPointT, 17);

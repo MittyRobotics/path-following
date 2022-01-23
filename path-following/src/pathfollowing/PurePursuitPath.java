@@ -82,7 +82,7 @@ public class PurePursuitPath {
      */
     public DifferentialDriveState update(Pose2D robotPose, double dt, double lookahead, double adjust_threshold, int newtonsSteps, double trackwidth) {
         //get t associated with closest point on spline
-        closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), newtonsSteps, 10);
+        closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), newtonsSteps, 5);
 
         //get distance traveled
         distanceTraveled = parametric.getGaussianQuadratureLength(closestPointT, 17);
@@ -203,7 +203,7 @@ public class PurePursuitPath {
      * @return the distance of a {@link Pose2D} from the spline
      */
     public double distanceFromSpline(Parametric parametric, Pose2D robotPose, int newtonsSteps) {
-        closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), newtonsSteps, 10);
+        closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), newtonsSteps, 5);
 
         return parametric.getPoint(closestPointT).distance(robotPose.getPosition());
     }
@@ -296,7 +296,7 @@ public class PurePursuitPath {
      * @return the lookahead {@link Point2D} based on robot {@link Pose2D}
      */
     public Point2D getLookaheadFromRobotPose(Pose2D robotPose, double lookahead, int newtonsSteps) {
-        closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), newtonsSteps, 10);
+        closestPointT = parametric.findClosestPointOnSpline(robotPose.getPosition(), newtonsSteps, 5);
         distanceTraveled = parametric.getGaussianQuadratureLength(closestPointT, 17);
 
         return getLookahead(distanceTraveled, lookahead);

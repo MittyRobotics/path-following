@@ -433,6 +433,8 @@ public class Parametric {
             Vector2D derivs = getDerivsAtT(cur_t, point);
 
             //amount to adjust according to Newton's method
+            //https://en.wikipedia.org/wiki/Newton%27s_method
+            //using first and second derivatives because we want min of distance function (zero of its derivative)
             double dt = derivs.getX() / derivs.getY();
 
             int counter = 0;
