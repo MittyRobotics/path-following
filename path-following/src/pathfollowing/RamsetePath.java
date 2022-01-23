@@ -1,6 +1,6 @@
 package pathfollowing;
 
-public class RamsetePath extends PurePursuitPath { //I know they should both extend PurePursuitPath but I'm lazy
+public class RamsetePath extends PurePursuitPath { //I know they should both extend Path but I'm lazy
     /**
      * Desired pose (everything else is same as Pure Pursuit)
      */
@@ -111,7 +111,7 @@ public class RamsetePath extends PurePursuitPath { //I know they should both ext
             Vector2D curAcc = new Vector2D(acc * robotPose.getAngle().cos(), acc * robotPose.getAngle().sin());
 
             //generate new path
-            parametric = parametric.getNewPurePursuitPath(robotPose, curVel, curAcc);
+            parametric = parametric.getNewPath(robotPose, curVel, curAcc);
             distanceToEnd = parametric.getLength();
         }
 

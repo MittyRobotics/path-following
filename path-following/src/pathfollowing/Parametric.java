@@ -532,8 +532,8 @@ public class Parametric {
         double stepsize = 1/steps;
         for(double t = 0; t <= 1; t += stepsize) {
             Point2D point = getPoint(t);
-            max.x = Math.max(max.getX(), Math.abs(point.getX()));
-            max.y = Math.max(max.getY(), Math.abs(point.getY()));
+            max.x = Math.max(max.x, Math.abs(point.getX()));
+            max.y = Math.max(max.y, Math.abs(point.getY()));
         }
 
         return max;
@@ -546,7 +546,7 @@ public class Parametric {
      * @param newAcc {@Vector2D} acceleration to start from
      * @return a new {@link Parametric} path to this parametric's setpoint from a position, velocity, and acceleration
      */
-    public Parametric getNewPurePursuitPath(Pose2D newPos, Vector2D newVel, Vector2D newAcc) {
+    public Parametric getNewPath(Pose2D newPos, Vector2D newVel, Vector2D newAcc) {
         if(this instanceof QuinticHermiteSpline) {
             //for quintic hermite splines
             return new QuinticHermiteSpline(newPos, ((QuinticHermiteSpline) this).getPose1(), newVel,

@@ -145,7 +145,7 @@ public class PurePursuitPath {
             Vector2D curAcc = new Vector2D(acc * robotPose.getAngle().cos(), acc * robotPose.getAngle().sin());
 
             //generate new path
-            parametric = parametric.getNewPurePursuitPath(robotPose, curVel, curAcc);
+            parametric = parametric.getNewPath(robotPose, curVel, curAcc);
             distanceToEnd = parametric.getLength();
         }
 
@@ -169,7 +169,7 @@ public class PurePursuitPath {
 
         for(Vector2D vel : previewVelocities) {
             //get max possible current velocity given future velocity and distance from future velocity
-            min = Math.min(min, maxVelocityFromDistance(vel.getY()-distanceTraveled, vel.getX(), maxDeceleration));
+            min = Math.min(min, maxVelocityFromDistance(vel.y-distanceTraveled, vel.x, maxDeceleration));
         }
 
         return min;

@@ -4,8 +4,8 @@ public class Point2D {
     /**
      * The x and y coordinates of the point
      */
-    private double x;
-    private double y;
+    public double x;
+    public double y;
 
     /**
      * Create a new point based on x and y coordinates
