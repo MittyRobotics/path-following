@@ -189,7 +189,7 @@ public class RamsetePathVisualizer {
 
         g.setColor(Color.BLACK);
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 24));
-        g.drawString("Ramsete Path Following", FRAME_WIDTH + 30, 70);
+        g.drawString("Ramsete Path Sim", FRAME_WIDTH + 30, 70);
 
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
 
