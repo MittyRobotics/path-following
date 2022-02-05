@@ -1,5 +1,6 @@
-apply plugin: 'java'
-apply plugin: 'maven-publish'
+plugins {
+    id 'maven-publish'
+}
 
 group = 'com.github.MittyRobotics'
 version = "1.0.0"
@@ -11,10 +12,10 @@ repositories {
 
 publishing {
     publications {
-        maven(MavenPublication) {
-            groupId = "com.github.MittyRobotics"
-            artifactId = "path-following"
-            version = "1.0.0"
+        mavenJava(MavenPublication) {
+            groupId = 'com.github.MittyRobotics'
+            artifactId = 'path-following'
+            version = '1.0.0'
         }
     }
 }
