@@ -8,6 +8,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.swing.*;
 
+import com.github.mittyrobotics.pathfollowing.*;
+
 public class RamsetePathVisualizer {
 
     private RamsetePath path;
