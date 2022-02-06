@@ -1,6 +1,4 @@
-package visualiser;
-
-import pathfollowing.*;
+package com.github.mittyrobotics.visualiser;
 
 import java.awt.*;
 import java.text.DecimalFormat;
@@ -10,16 +8,18 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.swing.*;
 
-public class PurePursuitPathVisualizer {
+public class RamsetePathVisualizer {
 
-    private PurePursuitPath path;
-    private double LOOKAHEAD;
+    private RamsetePath path;
     private double END_THRESHOLD;
     private double ADJUST_THRESHOLD;
     private final double dt;
     private final double TRACKWIDTH;
     private final double TRACKLENGTH;
-    private double cur_time, END_TIME;
+    private double b;
+    private double Z;
+    private double cur_time;
+    private double END_TIME;
     private Pose2D robotPosition, startPosition;
 
     private double METERS_TO_PIXELS;
@@ -30,39 +30,47 @@ public class PurePursuitPathVisualizer {
     private int ADJUST_FRAME_WIDTH;
     private int NEWTONS_STEPS;
     private final ArrayList<Pose2D> robotPoses = new ArrayList<>();
-    private final ArrayList<Point2D> lookaheads = new ArrayList<>();
     private final ArrayList<Vector2D> velocities = new ArrayList<>();
     private final ArrayList<Double> angularVelocities = new ArrayList<>();
     private final ArrayList<Double> curvatures = new ArrayList<>();
     private final ArrayList<Double> linearVelocities = new ArrayList<>();
     private final ArrayList<Parametric> parametrics = new ArrayList<>();
 
+
+    private final ArrayList<Double> vel = new ArrayList<>();
+    private final ArrayList<Double> angVel = new ArrayList<>();
+    private final ArrayList<Double> rvel = new ArrayList<>();
+    private final ArrayList<Double> rangVel = new ArrayList<>();
+    private final ArrayList<Double> ex = new ArrayList<>();
+    private final ArrayList<Double> ey = new ArrayList<>();
+    private final ArrayList<Double> et = new ArrayList<>();
+    private final ArrayList<Double> k = new ArrayList<>();
+    private final ArrayList<Double> t = new ArrayList<>();
+    private final ArrayList<Double> td = new ArrayList<>();
+
     private int cur_pos_index = 0;
     private JFrame frame, adjustFrame;
     private JComponent component, adjustComponent;
     private JButton runSimButton, adjustButton, updateButton, exportButton;
     private JSlider timeSlider;
-    private JTextField[] rightFields, leftFields;
-    private final String[] rightLabels = {"Max Acceleration", "Max Deceleration", "Max Velocity", "Max Angular Vel.", "Start Velocity", "End Velocity", "Start Position X", "Start Position Y", "Start Angle", "Lookahead", "End Threshold", "Adjust Threshold", "Newton's Steps"};
-    private final String[] leftLabels = {"Pose 0 X", "Pose 0 Y", "Pose 0 Angle", "Pose 1 X", "Pose 1 Y", "Pose 1 Angle", "Velocity 0 X", "Velocity 0 Y", "Velocity 1 X", "Velocity 1 Y", "Acceleration 0 X", "Acceleration 0 Y", "Acceleration 1 X", "Acceleration 1 Y"};
     private ScheduledExecutorService executorService;
+    private JTextField[] rightFields, leftFields;
+    private final String[] rightLabels = {"Max Acceleration", "Max Deceleration", "Max Velocity", "Max Angular Vel.", "Start Velocity", "End Velocity", "Start Position X", "Start Position Y", "Start Angle", "b", "Z", "End Threshold", "Adjust Threshold", "Newton's Steps"};
+    private final String[] leftLabels = {"Pose 0 X", "Pose 0 Y", "Pose 0 Angle", "Pose 1 X", "Pose 1 Y", "Pose 1 Angle", "Velocity 0 X", "Velocity 0 Y", "Velocity 1 X", "Velocity 1 Y", "Acceleration 0 X", "Acceleration 0 Y", "Acceleration 1 X", "Acceleration 1 Y"};
 
     boolean simulating = false;
 
-    public PurePursuitPathVisualizer(PurePursuitPath path, double LOOKAHEAD, double END_THRESHOLD, double ADJUST_THRESHOLD, int NEWTONS_STEPS, double TRACKWIDTH, double TRACKLENGTH, double dt) {
+    public RamsetePathVisualizer(RamsetePath path, double END_THRESHOLD, double ADJUST_THRESHOLD, int NEWTONS_STEPS, double TRACKWIDTH, double TRACKLENGTH, double b, double Z, double dt) {
         this.path = path;
-        this.LOOKAHEAD = LOOKAHEAD;
         this.END_THRESHOLD = END_THRESHOLD;
         this.ADJUST_THRESHOLD = ADJUST_THRESHOLD;
         this.NEWTONS_STEPS = NEWTONS_STEPS;
         this.TRACKWIDTH = TRACKWIDTH;
         this.TRACKLENGTH = TRACKLENGTH;
+        this.b = b;
+        this.Z = Z;
 
         this.dt = dt;
-    }
-
-    public PurePursuitPathVisualizer(PurePursuitPath path, double LOOKAHEAD, double THRESHOLD, double ADJUST_THRESHOLD, int NEWTONS_STEPS, double TRACKWIDTH, double TRACKLENGTH) {
-        this(path, LOOKAHEAD, THRESHOLD, ADJUST_THRESHOLD, NEWTONS_STEPS, TRACKWIDTH, TRACKLENGTH, 0.02);
     }
 
     public void draw(Graphics2D g) {
@@ -174,16 +182,12 @@ public class PurePursuitPathVisualizer {
             g.drawLine(convertXToPixels(pose1.getPosition().getX()), convertYToPixels(pose1.getPosition().getY()),convertXToPixels(pose2.getPosition().getX()), convertYToPixels(pose2.getPosition().getY()));
         }
 
-        g.setColor(Color.GREEN);
-        g.fillOval(convertXToPixels(lookaheads.get(cur_pos_index).getX())-5, convertYToPixels(lookaheads.get(cur_pos_index).getY())-5, 10, 10);
-
-
 
         //draw text
 
         g.setColor(Color.BLACK);
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 24));
-        g.drawString("Pure Pursuit Path Sim", FRAME_WIDTH + 30, 70);
+        g.drawString("Ramsete Path Sim", FRAME_WIDTH + 30, 70);
 
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
 
@@ -216,6 +220,21 @@ public class PurePursuitPathVisualizer {
         g.drawString("Endpoint: " + "(" + df.format(end.getX()*PurePursuitPath.TO_INCHES) + " in, " + df.format(end.getY()*PurePursuitPath.TO_INCHES) + " in)", FRAME_WIDTH+30, 570);
         double endAngle = path.getParametric().getPose(1).getAngle().getRadians();
         g.drawString("End Angle: " + df.format(endAngle * 180 / Math.PI) + " °", FRAME_WIDTH+30, 600);
+
+//        g.drawString("Orig Vel: " + df.format(vel.get(cur_pos_index)), FRAME_WIDTH + 30, 180);
+//        g.drawString("Orig Ang Vel: " + df.format(angVel.get(cur_pos_index)), FRAME_WIDTH + 30, 210);
+//
+//        g.drawString("Ramsete Vel: " + df.format(rvel.get(cur_pos_index)), FRAME_WIDTH + 30, 250);
+//        g.drawString("Ramsete Ang Vel: " + df.format(rangVel.get(cur_pos_index)), FRAME_WIDTH + 30, 280);
+//
+//        g.drawString("ex: " + df.format(ex.get(cur_pos_index)), FRAME_WIDTH + 30, 320);
+//        g.drawString("ey: " + df.format(ey.get(cur_pos_index)), FRAME_WIDTH + 30, 350);
+//        g.drawString("et: " + df.format(et.get(cur_pos_index)), FRAME_WIDTH + 30, 380);
+//        g.drawString("k: " + df.format(k.get(cur_pos_index)), FRAME_WIDTH + 30, 420);
+//
+//        g.drawString("t: " + df.format(t.get(cur_pos_index)), FRAME_WIDTH + 30, 460);
+//        g.drawString("td: " + df.format(td.get(cur_pos_index)), FRAME_WIDTH + 30, 490);
+//
 
         g.drawString("Time Elapsed: " + df.format(cur_pos_index * 0.02) + " s", FRAME_WIDTH+30, 650);
         g.drawString("Total Time: " + df.format((velocities.size()-1) * 0.02) + " s", FRAME_WIDTH+30, 680);
@@ -256,10 +275,11 @@ public class PurePursuitPathVisualizer {
         rightFields[6].setText(df.format(startPosition.getPosition().getX() * PurePursuitPath.TO_INCHES));
         rightFields[7].setText(df.format(startPosition.getPosition().getY() * PurePursuitPath.TO_INCHES));
         rightFields[8].setText(df.format(startPosition.getAngle().getRadians() * 180 / Math.PI));
-        rightFields[9].setText(df.format(LOOKAHEAD * PurePursuitPath.TO_INCHES));
-        rightFields[10].setText(df.format(END_THRESHOLD * PurePursuitPath.TO_INCHES));
-        rightFields[11].setText(df.format(ADJUST_THRESHOLD * PurePursuitPath.TO_INCHES));
-        rightFields[12].setText(df.format(NEWTONS_STEPS));
+        rightFields[9].setText(df.format(b));
+        rightFields[10].setText(df.format(Z));
+        rightFields[11].setText(df.format(END_THRESHOLD * PurePursuitPath.TO_INCHES));
+        rightFields[12].setText(df.format(ADJUST_THRESHOLD * PurePursuitPath.TO_INCHES));
+        rightFields[13].setText(df.format(NEWTONS_STEPS));
 
         leftFields[0].setText(df.format(path.getParametric().getPoint(0).getX() * PurePursuitPath.TO_INCHES));
         leftFields[1].setText(df.format(path.getParametric().getPoint(0).getY() * PurePursuitPath.TO_INCHES));
@@ -296,9 +316,9 @@ public class PurePursuitPathVisualizer {
         String acc1Y = leftFields[13].getText();
 
         Parametric newParametric = new QuinticHermiteSpline(new Pose2D(returnNumber(pose0X) * PurePursuitPath.TO_METERS, returnNumber(pose0Y) * PurePursuitPath.TO_METERS, returnNumber(pose0Angle) * Math.PI / 180),
-                                                            new Pose2D(returnNumber(pose1X) * PurePursuitPath.TO_METERS, returnNumber(pose1Y) * PurePursuitPath.TO_METERS, returnNumber(pose1Angle) * Math.PI / 180),
-                                                            new Vector2D(returnNumber(vel0X) * PurePursuitPath.TO_METERS, returnNumber(vel0Y) * PurePursuitPath.TO_METERS), new Vector2D(returnNumber(vel1X) * PurePursuitPath.TO_METERS, returnNumber(vel1Y) * PurePursuitPath.TO_METERS),
-                                                            new Vector2D(returnNumber(acc0X) * PurePursuitPath.TO_METERS, returnNumber(acc0Y) * PurePursuitPath.TO_METERS), new Vector2D(returnNumber(acc1X) * PurePursuitPath.TO_METERS, returnNumber(acc1Y) * PurePursuitPath.TO_METERS));
+                new Pose2D(returnNumber(pose1X) * PurePursuitPath.TO_METERS, returnNumber(pose1Y) * PurePursuitPath.TO_METERS, returnNumber(pose1Angle) * Math.PI / 180),
+                new Vector2D(returnNumber(vel0X) * PurePursuitPath.TO_METERS, returnNumber(vel0Y) * PurePursuitPath.TO_METERS), new Vector2D(returnNumber(vel1X) * PurePursuitPath.TO_METERS, returnNumber(vel1Y) * PurePursuitPath.TO_METERS),
+                new Vector2D(returnNumber(acc0X) * PurePursuitPath.TO_METERS, returnNumber(acc0Y) * PurePursuitPath.TO_METERS), new Vector2D(returnNumber(acc1X) * PurePursuitPath.TO_METERS, returnNumber(acc1Y) * PurePursuitPath.TO_METERS));
 
         String maxAcc = rightFields[0].getText();
         String maxDec = rightFields[1].getText();
@@ -312,13 +332,14 @@ public class PurePursuitPathVisualizer {
 
         this.startPosition = new Pose2D(returnNumber(startX) * PurePursuitPath.TO_METERS, returnNumber(startY) * PurePursuitPath.TO_METERS, returnNumber(startAng) * Math.PI / 180);
 
-        path = new PurePursuitPath(newParametric, returnNumber(maxAcc) * PurePursuitPath.TO_METERS, returnNumber(maxDec) * PurePursuitPath.TO_METERS, returnNumber(maxVel) * PurePursuitPath.TO_METERS,
+        path = new RamsetePath(newParametric, returnNumber(maxAcc) * PurePursuitPath.TO_METERS, returnNumber(maxDec) * PurePursuitPath.TO_METERS, returnNumber(maxVel) * PurePursuitPath.TO_METERS,
                 returnNumber(maxAngVel) * PurePursuitPath.TO_METERS, returnNumber(stVel) * PurePursuitPath.TO_METERS, returnNumber(endVel) * PurePursuitPath.TO_METERS);
 
-        LOOKAHEAD = returnNumber(rightFields[9].getText()) * PurePursuitPath.TO_METERS;
-        END_THRESHOLD = returnNumber(rightFields[10].getText()) * PurePursuitPath.TO_METERS;
-        ADJUST_THRESHOLD = returnNumber(rightFields[11].getText()) * PurePursuitPath.TO_METERS;
-        NEWTONS_STEPS = Integer.parseInt(rightFields[12].getText());
+        b = returnNumber(rightFields[9].getText());
+        Z = returnNumber(rightFields[10].getText());
+        END_THRESHOLD = returnNumber(rightFields[11].getText()) * PurePursuitPath.TO_METERS;
+        ADJUST_THRESHOLD = returnNumber(rightFields[12].getText()) * PurePursuitPath.TO_METERS;
+        NEWTONS_STEPS = Integer.parseInt(rightFields[13].getText());
     }
 
     public int checkAll() {
@@ -330,7 +351,7 @@ public class PurePursuitPathVisualizer {
         }
 
         for(int i = 0; i < rightFields.length; i++) {
-            if(i == 12) {
+            if(i == 13) {
                 try {
                     Integer.parseInt(rightFields[i].getText());
                 } catch (Exception e) {
@@ -344,6 +365,12 @@ public class PurePursuitPathVisualizer {
             } else if (checkAdjust(i, rightFields[i].getText(), true) == 2 && i != 6 && i != 7) {
                 JOptionPane.showMessageDialog(adjustComponent, rightLabels[i] + " must be positive");
                 return -1;
+            }
+            if(i == 10) {
+                if(returnNumber(rightFields[i].getText()) >= 1 || returnNumber(rightFields[i].getText()) <= 0) {
+                    JOptionPane.showMessageDialog(adjustComponent, rightLabels[i] + " must be on the interval (0, 1)");
+                    return -1;
+                }
             }
         }
         return 0;
@@ -361,6 +388,103 @@ public class PurePursuitPathVisualizer {
         } catch (Exception e) {
             return 1;
         }
+    }
+
+    public int exportPurePursuitPath() {
+
+        if(checkAll() != 0) {
+            return -1;
+        }
+
+        String pose0X = leftFields[0].getText();
+        String pose0Y = leftFields[1].getText();
+        String pose0Angle = leftFields[2].getText();
+        String pose1X = leftFields[3].getText();
+        String pose1Y = leftFields[4].getText();
+        String pose1Angle = leftFields[5].getText();
+        String vel0X = leftFields[6].getText();
+        String vel0Y = leftFields[7].getText();
+        String vel1X = leftFields[8].getText();
+        String vel1Y = leftFields[9].getText();
+        String acc0X = leftFields[10].getText();
+        String acc0Y = leftFields[11].getText();
+        String acc1X = leftFields[12].getText();
+        String acc1Y = leftFields[13].getText();
+
+        Parametric newParametric = new QuinticHermiteSpline(new Pose2D(returnNumber(pose0X) * PurePursuitPath.TO_METERS, returnNumber(pose0Y) * PurePursuitPath.TO_METERS, returnNumber(pose0Angle) * Math.PI / 180),
+                new Pose2D(returnNumber(pose1X) * PurePursuitPath.TO_METERS, returnNumber(pose1Y) * PurePursuitPath.TO_METERS, returnNumber(pose1Angle) * Math.PI / 180),
+                new Vector2D(returnNumber(vel0X) * PurePursuitPath.TO_METERS, returnNumber(vel0Y) * PurePursuitPath.TO_METERS), new Vector2D(returnNumber(vel1X) * PurePursuitPath.TO_METERS, returnNumber(vel1Y) * PurePursuitPath.TO_METERS),
+                new Vector2D(returnNumber(acc0X) * PurePursuitPath.TO_METERS, returnNumber(acc0Y) * PurePursuitPath.TO_METERS), new Vector2D(returnNumber(acc1X) * PurePursuitPath.TO_METERS, returnNumber(acc1Y) * PurePursuitPath.TO_METERS));
+
+        String maxAcc = rightFields[0].getText();
+        String maxDec = rightFields[1].getText();
+        String maxVel = rightFields[2].getText();
+        String maxAngVel = rightFields[3].getText();
+        String stVel = rightFields[4].getText();
+        String endVel = rightFields[5].getText();
+        String startX = rightFields[6].getText();
+        String startY = rightFields[7].getText();
+        String startAng = rightFields[8].getText();
+
+        this.startPosition = new Pose2D(returnNumber(startX) * PurePursuitPath.TO_METERS, returnNumber(startY) * PurePursuitPath.TO_METERS, returnNumber(startAng) * Math.PI / 180);
+
+        path = new RamsetePath(newParametric, returnNumber(maxAcc) * PurePursuitPath.TO_METERS, returnNumber(maxDec) * PurePursuitPath.TO_METERS, returnNumber(maxVel) * PurePursuitPath.TO_METERS,
+                returnNumber(maxAngVel) * PurePursuitPath.TO_METERS, returnNumber(stVel) * PurePursuitPath.TO_METERS, returnNumber(endVel) * PurePursuitPath.TO_METERS);
+
+        b = returnNumber(rightFields[9].getText());
+        Z = returnNumber(rightFields[10].getText());
+        END_THRESHOLD = returnNumber(rightFields[11].getText()) * PurePursuitPath.TO_METERS;
+        ADJUST_THRESHOLD = returnNumber(rightFields[12].getText()) * PurePursuitPath.TO_METERS;
+        NEWTONS_STEPS = Integer.parseInt(rightFields[13].getText());
+
+
+
+        JFrame exportFrame = new JFrame();
+        exportFrame.setSize(1000, 500 + TITLE_HEIGHT);
+        exportFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        exportFrame.setResizable(false);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(null);
+
+        JTextArea f = new JTextArea();
+        f.setEditable(false);
+        f.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
+        f.setBounds(20, 20, 960, 460);
+        f.setBackground(null);
+        f.setBorder(null);
+        f.setLineWrap(true);
+        f.setWrapStyleWord(true);
+        f.setText(
+                "private double b = " + rightFields[9].getText() + ";\n" + "private double Z = " + rightFields[10].getText() + ";\nprivate double END_THRESHOLD = " + rightFields[11].getText() + " * PurePursuitPath.TO_METERS;\n" +
+                "private double ADJUST_THRESHOLD = " + rightFields[12].getText() + " * PurePursuitPath.TO_METERS;\nprivate int NEWTON_STEPS = " + NEWTONS_STEPS + ";\n\n" +
+                "QuinticHermiteSpline parametric = new QuinticHermiteSpline(\n    new Pose2D(" + pose0X + " * PurePursuitPath.TO_METERS, " +
+                pose0Y + " * PurePursuitPath.TO_METERS, " + pose0Angle + " * Math.PI/180), \n    new Pose2D(" + pose1X + " * PurePursuitPath.TO_METERS, " +
+                pose1Y + " * PurePursuitPath.TO_METERS, " + pose1Angle + " * Math.PI/180), \n    new Vector2D(" + vel0X + " * PurePursuitPath.TO_METERS, " +
+                vel0Y + " * PurePursuitPath.TO_METERS), \n    new Vector2D(" + vel1X + " * PurePursuitPath.TO_METERS, " + vel1Y + " * PurePursuitPath.TO_METERS), \n    new Vector2D(" +
+                acc0X + " * PurePursuitPath.TO_METERS, " + acc0Y + " * PurePursuitPath.TO_METERS), \n    new Vector2D(" + acc1X + " * PurePursuitPath.TO_METERS, " +
+                acc1Y + " * PurePursuitPath.TO_METERS)\n);\n\n" +
+                "RamsetePath path = new RamsetePath(parametric, \n    " + maxAcc + " * PurePursuitPath.TO_METERS, " + maxDec + " * PurePursuitPath.TO_METERS, \n    "
+                + maxVel + " * PurePursuitPath.TO_METERS, " + maxAngVel + " * PurePursuitPath.TO_METERS, \n    " + stVel + " * PurePursuitPath.TO_METERS, " + endVel + " * PurePursuitPath.TO_METERS\n);"
+        );
+        panel.add(f);
+
+        exportFrame.add(panel);
+
+        exportFrame.setVisible(true);
+
+        System.out.println("private double b = " + rightFields[9].getText() + ";\n" + "private double Z = " + rightFields[10].getText() + ";\nprivate double END_THRESHOLD = " + rightFields[11].getText() + " * PurePursuitPath.TO_METERS;\n" +
+                "private double ADJUST_THRESHOLD = " + rightFields[12].getText() + " * PurePursuitPath.TO_METERS;\nprivate int NEWTON_STEPS = " + NEWTONS_STEPS + ";\n\n" +
+                "QuinticHermiteSpline parametric = new QuinticHermiteSpline(\n    new Pose2D(" + pose0X + " * PurePursuitPath.TO_METERS, " +
+                pose0Y + " * PurePursuitPath.TO_METERS, " + pose0Angle + " * Math.PI/180), \n    new Pose2D(" + pose1X + " * PurePursuitPath.TO_METERS, " +
+                pose1Y + " * PurePursuitPath.TO_METERS, " + pose1Angle + " * Math.PI/180), \n    new Vector2D(" + vel0X + " * PurePursuitPath.TO_METERS, " +
+                vel0Y + " * PurePursuitPath.TO_METERS), \n    new Vector2D(" + vel1X + " * PurePursuitPath.TO_METERS, " + vel1Y + " * PurePursuitPath.TO_METERS), \n    new Vector2D(" +
+                acc0X + " * PurePursuitPath.TO_METERS, " + acc0Y + " * PurePursuitPath.TO_METERS), \n    new Vector2D(" + acc1X + " * PurePursuitPath.TO_METERS, " +
+                acc1Y + " * PurePursuitPath.TO_METERS)\n);\n\n" +
+                "RamsetePath path = new RamsetePath(parametric, \n    " + maxAcc + " * PurePursuitPath.TO_METERS, " + maxDec + " * PurePursuitPath.TO_METERS, \n    "
+                + maxVel + " * PurePursuitPath.TO_METERS, " + maxAngVel + " * PurePursuitPath.TO_METERS, \n    " + stVel + " * PurePursuitPath.TO_METERS, " + endVel + " * PurePursuitPath.TO_METERS\n);");
+
+        return 0;
     }
 
     public double returnNumber(String s) {
@@ -409,108 +533,13 @@ public class PurePursuitPathVisualizer {
         component.add(timeSlider);
     }
 
-    public int exportPurePursuitPath() {
-
-        if(checkAll() != 0) {
-            return -1;
-        }
-
-        String pose0X = leftFields[0].getText();
-        String pose0Y = leftFields[1].getText();
-        String pose0Angle = leftFields[2].getText();
-        String pose1X = leftFields[3].getText();
-        String pose1Y = leftFields[4].getText();
-        String pose1Angle = leftFields[5].getText();
-        String vel0X = leftFields[6].getText();
-        String vel0Y = leftFields[7].getText();
-        String vel1X = leftFields[8].getText();
-        String vel1Y = leftFields[9].getText();
-        String acc0X = leftFields[10].getText();
-        String acc0Y = leftFields[11].getText();
-        String acc1X = leftFields[12].getText();
-        String acc1Y = leftFields[13].getText();
-
-        Parametric newParametric = new QuinticHermiteSpline(new Pose2D(returnNumber(pose0X) * PurePursuitPath.TO_METERS, returnNumber(pose0Y) * PurePursuitPath.TO_METERS, returnNumber(pose0Angle) * Math.PI / 180),
-                new Pose2D(returnNumber(pose1X) * PurePursuitPath.TO_METERS, returnNumber(pose1Y) * PurePursuitPath.TO_METERS, returnNumber(pose1Angle) * Math.PI / 180),
-                new Vector2D(returnNumber(vel0X) * PurePursuitPath.TO_METERS, returnNumber(vel0Y) * PurePursuitPath.TO_METERS), new Vector2D(returnNumber(vel1X) * PurePursuitPath.TO_METERS, returnNumber(vel1Y) * PurePursuitPath.TO_METERS),
-                new Vector2D(returnNumber(acc0X) * PurePursuitPath.TO_METERS, returnNumber(acc0Y) * PurePursuitPath.TO_METERS), new Vector2D(returnNumber(acc1X) * PurePursuitPath.TO_METERS, returnNumber(acc1Y) * PurePursuitPath.TO_METERS));
-
-        String maxAcc = rightFields[0].getText();
-        String maxDec = rightFields[1].getText();
-        String maxVel = rightFields[2].getText();
-        String maxAngVel = rightFields[3].getText();
-        String stVel = rightFields[4].getText();
-        String endVel = rightFields[5].getText();
-        String startX = rightFields[6].getText();
-        String startY = rightFields[7].getText();
-        String startAng = rightFields[8].getText();
-
-        this.startPosition = new Pose2D(returnNumber(startX) * PurePursuitPath.TO_METERS, returnNumber(startY) * PurePursuitPath.TO_METERS, returnNumber(startAng) * Math.PI / 180);
-
-        path = new PurePursuitPath(newParametric, returnNumber(maxAcc) * PurePursuitPath.TO_METERS, returnNumber(maxDec) * PurePursuitPath.TO_METERS, returnNumber(maxVel) * PurePursuitPath.TO_METERS,
-                returnNumber(maxAngVel) * PurePursuitPath.TO_METERS, returnNumber(stVel) * PurePursuitPath.TO_METERS, returnNumber(endVel) * PurePursuitPath.TO_METERS);
-
-        LOOKAHEAD = returnNumber(rightFields[9].getText()) * PurePursuitPath.TO_METERS;
-        END_THRESHOLD = returnNumber(rightFields[10].getText()) * PurePursuitPath.TO_METERS;
-        ADJUST_THRESHOLD = returnNumber(rightFields[11].getText()) * PurePursuitPath.TO_METERS;
-        NEWTONS_STEPS = Integer.parseInt(rightFields[12].getText());
-
-
-
-        JFrame exportFrame = new JFrame();
-        exportFrame.setSize(1000, 500 + TITLE_HEIGHT);
-        exportFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        exportFrame.setResizable(false);
-
-        JPanel panel = new JPanel();
-        panel.setLayout(null);
-
-        JTextArea f = new JTextArea();
-        f.setEditable(false);
-        f.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
-        f.setBounds(20, 20, 960, 460);
-        f.setBackground(null);
-        f.setBorder(null);
-        f.setLineWrap(true);
-        f.setWrapStyleWord(true);
-        f.setText(
-                "private double LOOKAHEAD = " + rightFields[9].getText() + " * PurePursuitPath.TO_METERS;\nprivate double END_THRESHOLD = " + rightFields[10].getText() + " * PurePursuitPath.TO_METERS;\n" +
-                "private double ADJUST_THRESHOLD = " + rightFields[11].getText() + " * PurePursuitPath.TO_METERS;\nprivate int NEWTON_STEPS = " + NEWTONS_STEPS + ";\n\n" +
-                "QuinticHermiteSpline parametric = new QuinticHermiteSpline(\n    new Pose2D(" + pose0X + " * PurePursuitPath.TO_METERS, " +
-                pose0Y + " * PurePursuitPath.TO_METERS, " + pose0Angle + " * Math.PI/180), \n    new Pose2D(" + pose1X + " * PurePursuitPath.TO_METERS, " +
-                pose1Y + " * PurePursuitPath.TO_METERS, " + pose1Angle + " * Math.PI/180), \n    new Vector2D(" + vel0X + " * PurePursuitPath.TO_METERS, " +
-                vel0Y + " * PurePursuitPath.TO_METERS), \n    new Vector2D(" + vel1X + " * PurePursuitPath.TO_METERS, " + vel1Y + " * PurePursuitPath.TO_METERS), \n    new Vector2D(" +
-                acc0X + " * PurePursuitPath.TO_METERS, " + acc0Y + " * PurePursuitPath.TO_METERS), \n    new Vector2D(" + acc1X + " * PurePursuitPath.TO_METERS, " +
-                acc1Y + " * PurePursuitPath.TO_METERS)\n);\n\n" +
-                "PurePursuitPath path = new PurePursuitPath(parametric, \n    " + maxAcc + " * PurePursuitPath.TO_METERS, " + maxDec + " * PurePursuitPath.TO_METERS, \n    "
-                + maxVel + " * PurePursuitPath.TO_METERS, " + maxAngVel + " * PurePursuitPath.TO_METERS, \n    " + stVel + " * PurePursuitPath.TO_METERS, " + endVel + " * PurePursuitPath.TO_METERS\n);"
-        );
-        panel.add(f);
-
-        exportFrame.add(panel);
-
-        exportFrame.setVisible(true);
-
-        System.out.println("private double LOOKAHEAD = " + rightFields[9].getText() + " * PurePursuitPath.TO_METERS;\nprivate double END_THRESHOLD = " + rightFields[10].getText() + " * PurePursuitPath.TO_METERS;\n" +
-                "private double ADJUST_THRESHOLD = " + rightFields[11].getText() + " * PurePursuitPath.TO_METERS;\nprivate int NEWTON_STEPS = " + NEWTONS_STEPS + ";\n\n" +
-                "QuinticHermiteSpline parametric = new QuinticHermiteSpline(\n    new Pose2D(" + pose0X + " * PurePursuitPath.TO_METERS, " +
-                pose0Y + " * PurePursuitPath.TO_METERS, " + pose0Angle + " * Math.PI/180), \n    new Pose2D(" + pose1X + " * PurePursuitPath.TO_METERS, " +
-                pose1Y + " * PurePursuitPath.TO_METERS, " + pose1Angle + " * Math.PI/180), \n    new Vector2D(" + vel0X + " * PurePursuitPath.TO_METERS, " +
-                vel0Y + " * PurePursuitPath.TO_METERS), \n    new Vector2D(" + vel1X + " * PurePursuitPath.TO_METERS, " + vel1Y + " * PurePursuitPath.TO_METERS), \n    new Vector2D(" +
-                acc0X + " * PurePursuitPath.TO_METERS, " + acc0Y + " * PurePursuitPath.TO_METERS), \n    new Vector2D(" + acc1X + " * PurePursuitPath.TO_METERS, " +
-                acc1Y + " * PurePursuitPath.TO_METERS)\n);\n\n" +
-                "PurePursuitPath path = new PurePursuitPath(parametric, \n    " + maxAcc + " * PurePursuitPath.TO_METERS, " + maxDec + " * PurePursuitPath.TO_METERS, \n    "
-                + maxVel + " * PurePursuitPath.TO_METERS, " + maxAngVel + " * PurePursuitPath.TO_METERS, \n    " + stVel + " * PurePursuitPath.TO_METERS, " + endVel + " * PurePursuitPath.TO_METERS\n);");
-
-        return 0;
-    }
-
     public void run(Pose2D startPosition, double END_TIME) {
 
-        this.END_TIME = END_TIME;
         this.startPosition = startPosition;
+        this.END_TIME = END_TIME;
 
         simulate(startPosition, END_TIME);
+
 
         frame = new JFrame();
 
@@ -538,7 +567,6 @@ public class PurePursuitPathVisualizer {
         frame.add(component);
 
         frame.setVisible(true);
-
 
         adjustFrame = new JFrame();
         adjustFrame.setSize(ADJUST_FRAME_WIDTH, ADJUST_FRAME_HEIGHT+TITLE_HEIGHT);
@@ -602,17 +630,9 @@ public class PurePursuitPathVisualizer {
 
         adjustComponent.add(updateButton);
 
-        exportButton = new JButton("Export");
-        exportButton.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 24));
-        exportButton.setBounds(ADJUST_FRAME_WIDTH/2 + 10, ADJUST_FRAME_HEIGHT-70, 200, 50);
-        exportButton.addActionListener(e -> exportPurePursuitPath());
-
-        adjustComponent.add(exportButton);
-
         updateAdjustFrame();
 
         adjustFrame.setVisible(false);
-
 
 
         runSimButton = new JButton("RUN SIM");
@@ -630,6 +650,13 @@ public class PurePursuitPathVisualizer {
         adjustButton.addActionListener(e -> toggleAdjustFrame());
 
         component.add(adjustButton);
+
+        exportButton = new JButton("Export");
+        exportButton.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 24));
+        exportButton.setBounds(ADJUST_FRAME_WIDTH/2 + 10, ADJUST_FRAME_HEIGHT-70, 200, 50);
+        exportButton.addActionListener(e -> exportPurePursuitPath());
+
+        adjustComponent.add(exportButton);
 
 
         Runnable simRunnable = () -> {
@@ -679,27 +706,52 @@ public class PurePursuitPathVisualizer {
 
         curvatures.clear();
         robotPoses.clear();
-        lookaheads.clear();
         velocities.clear();
         angularVelocities.clear();
         linearVelocities.clear();
         parametrics.clear();
 
+        vel.clear();
+        angVel.clear();
+        rvel.clear();
+        rangVel.clear();
+        ex.clear();
+        ey.clear();
+        et.clear();
+        k.clear();
+        t.clear();
+        td.clear();
+
+
+
         curvatures.add(path.getCurvature(0));
         robotPoses.add(robotPosition);
-        lookaheads.add(path.getLookaheadFromRobotPose(robotPosition, LOOKAHEAD, NEWTONS_STEPS));
         velocities.add(new Vector2D(path.getStartVelocity(), path.getStartVelocity()));
         angularVelocities.add(path.getAngularVelocityAtPoint(0, path.getStartVelocity()));
         linearVelocities.add(path.getStartVelocity());
         parametrics.add(path.getParametric());
 
+
+        vel.add(0.);
+        angVel.add(0.);
+        rvel.add(0.);
+        rangVel.add(0.);
+        et.add(0.);
+        ey.add(0.);
+        ex.add(0.);
+        k.add(0.);
+        t.add(0.);
+        td.add(0.);
+
         //http://rossum.sourceforge.net/papers/DiffSteer/
 
         while(cur_time < END_TIME) {
 
-            DifferentialDriveState dds = path.update(robotPosition, dt, LOOKAHEAD, ADJUST_THRESHOLD, NEWTONS_STEPS, TRACKWIDTH);
+            DifferentialDriveState dds = path.update(robotPosition, dt, ADJUST_THRESHOLD, NEWTONS_STEPS, b, Z, TRACKWIDTH);
+
             double left = dds.getLeftVelocity() * dt;
             double right = dds.getRightVelocity() * dt;
+
             Angle angle = robotPosition.getAngle();
             double x = robotPosition.getPosition().getX();
             double y = robotPosition.getPosition().getY();
@@ -724,11 +776,24 @@ public class PurePursuitPathVisualizer {
             robotPosition = new Pose2D(new_x, new_y, newAngle);
 
             robotPoses.add(robotPosition);
-            lookaheads.add(path.getLookaheadFromRobotPose(robotPosition, LOOKAHEAD, NEWTONS_STEPS));
             velocities.add(new Vector2D(dds.getLeftVelocity(), dds.getRightVelocity()));
             angularVelocities.add(dds.getAngularVelocity());
             linearVelocities.add(dds.getLinearVelocity());
             parametrics.add(path.getParametric());
+
+
+            rvel.add(RamseteController.rvel);
+            rangVel.add(RamseteController.angVel);
+            vel.add(RamseteController.vel);
+            angVel.add(RamseteController.angVel);
+            ex.add(RamseteController.ex);
+            ey.add(RamseteController.ey);
+            et.add(RamseteController.et);
+            k.add(RamseteController.k);
+            t.add(RamseteController.t.getRadians());
+            td.add(RamseteController.td.getRadians());
+
+
 
             if(path.isFinished(robotPosition, END_THRESHOLD)) {
                 break;

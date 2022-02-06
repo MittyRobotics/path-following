@@ -1,4 +1,4 @@
-# Path-Following-V2
+# path-following
 
 * Quintic hermite splines
 * Controllable trapezoidal motion profile with limited angular velocity
@@ -7,13 +7,13 @@
 
 ### Graphical path visualiser:
 
-![](https://raw.githubusercontent.com/MittyRobotics/Path-Following-V2/main/path-following/img/sim.png)
+![](https://raw.githubusercontent.com/MittyRobotics/path-following/main/img/sim.png)
 
 Adjusting the path and spline:
 
-<img src="https://raw.githubusercontent.com/MittyRobotics/Path-Following-V2/main/path-following/img/adjust.png" alt="Adjust" height="500px">
+<img src="https://raw.githubusercontent.com/MittyRobotics/path-following/main/img/adjust.png" alt="Adjust" height="500px">
 
 Exporting the path and spline:
 
-<img src="https://raw.githubusercontent.com/MittyRobotics/Path-Following-V2/main/path-following/img/export.png" alt="Export" height="300px">
+<img src="https://raw.githubusercontent.com/MittyRobotics/path-following/main/img/export.png" alt="Export" height="300px">
 

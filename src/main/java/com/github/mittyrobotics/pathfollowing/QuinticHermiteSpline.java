@@ -1,4 +1,4 @@
-package pathfollowing;
+package com.github.mittyrobotics.pathfollowing;
 
 public class QuinticHermiteSpline extends Parametric {
     //https://www.rose-hulman.edu/~finn/CCLI/Notes/day09.pdf

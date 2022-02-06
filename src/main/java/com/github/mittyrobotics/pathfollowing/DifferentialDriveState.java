@@ -1,4 +1,4 @@
-package pathfollowing;
+package com.github.mittyrobotics.pathfollowing;
 
 public class DifferentialDriveState {
     /**

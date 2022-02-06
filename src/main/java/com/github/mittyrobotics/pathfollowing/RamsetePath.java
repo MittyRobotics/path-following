@@ -1,4 +1,4 @@
-package pathfollowing;
+package com.github.mittyrobotics.pathfollowing;
 
 public class RamsetePath extends PurePursuitPath { //I know they should both extend Path but I'm lazy
     /**
