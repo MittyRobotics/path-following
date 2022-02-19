@@ -1,9 +1,12 @@
 # path-following
 
+## Library: https://jitpack.io/#MittyRobotics/path-following/1.1.0
+
 * Quintic hermite splines
 * Controllable trapezoidal motion profile with limited angular velocity
 * Runs in real-time using fast estimation techniques like Gauss-Legendre quadrature and modified Newton-Raphson method
 * Pure Pursuit and Ramsete Path Following Algorithms
+* Fully documented & libraritized
 
 ### Graphical path visualiser:
 
