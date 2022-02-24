@@ -191,9 +191,9 @@ public class PurePursuitPathVisualizer {
         df.setMaximumFractionDigits(3);
         df.setMinimumFractionDigits(3);
 
-        g.drawString("Velocity: " + df.format(linearVelocities.get(cur_pos_index)*PurePursuitPath.TO_INCHES) + " in/s", FRAME_WIDTH+30, 180);
-        g.drawString("Left Velocity: " + df.format(velocities.get(cur_pos_index).getX()*PurePursuitPath.TO_INCHES) + " in/s", FRAME_WIDTH+30, 210);
-        g.drawString("Right Velocity: " + df.format(velocities.get(cur_pos_index).getY()*PurePursuitPath.TO_INCHES) + " in/s", FRAME_WIDTH+30, 240);
+        g.drawString("Velocity: " + df.format(linearVelocities.get(cur_pos_index)*Path.TO_INCHES) + " in/s", FRAME_WIDTH+30, 180);
+        g.drawString("Left Velocity: " + df.format(velocities.get(cur_pos_index).getX()*Path.TO_INCHES) + " in/s", FRAME_WIDTH+30, 210);
+        g.drawString("Right Velocity: " + df.format(velocities.get(cur_pos_index).getY()*Path.TO_INCHES) + " in/s", FRAME_WIDTH+30, 240);
 
         Vector2D acc = new Vector2D();
         double lacc = 0;
@@ -203,17 +203,17 @@ public class PurePursuitPathVisualizer {
             lacc = (linearVelocities.get(cur_pos_index) - linearVelocities.get(cur_pos_index-1))/dt;
         }
 
-        g.drawString("Acceleration: " + df.format(lacc*PurePursuitPath.TO_INCHES) + " in/s^2", FRAME_WIDTH+30, 290);
-        g.drawString("Left Acceleration: " + df.format(acc.getX()*PurePursuitPath.TO_INCHES) + " in/s^2", FRAME_WIDTH+30, 320);
-        g.drawString("Right Acceleration: " + df.format(acc.getY()*PurePursuitPath.TO_INCHES) + " in/s^2", FRAME_WIDTH+30, 350);
+        g.drawString("Acceleration: " + df.format(lacc*Path.TO_INCHES) + " in/s^2", FRAME_WIDTH+30, 290);
+        g.drawString("Left Acceleration: " + df.format(acc.getX()*Path.TO_INCHES) + " in/s^2", FRAME_WIDTH+30, 320);
+        g.drawString("Right Acceleration: " + df.format(acc.getY()*Path.TO_INCHES) + " in/s^2", FRAME_WIDTH+30, 350);
 
-        g.drawString("Angular Velocity: " + df.format(angularVelocities.get(cur_pos_index)*PurePursuitPath.TO_INCHES) + " in/s", FRAME_WIDTH+30, 400);
+        g.drawString("Angular Velocity: " + df.format(angularVelocities.get(cur_pos_index)*Path.TO_INCHES) + " in/s", FRAME_WIDTH+30, 400);
         g.drawString("Curvature: " + df.format(curvatures.get(cur_pos_index)*PurePursuitPath.TO_METERS) + " in^-1", FRAME_WIDTH+30, 430);
 
-        g.drawString("Position: " + "(" + df.format(pos.getX()*PurePursuitPath.TO_INCHES) + " in, " + df.format(pos.getY()*PurePursuitPath.TO_INCHES) + " in)", FRAME_WIDTH+30, 480);
-        g.drawString("Distance From Spline: " + df.format(path.distanceFromSpline(parametrics.get(cur_pos_index), robotPoses.get(cur_pos_index), NEWTONS_STEPS) * PurePursuitPath.TO_INCHES) + " in", FRAME_WIDTH+30, 510);
+        g.drawString("Position: " + "(" + df.format(pos.getX()*Path.TO_INCHES) + " in, " + df.format(pos.getY()*Path.TO_INCHES) + " in)", FRAME_WIDTH+30, 480);
+        g.drawString("Distance From Spline: " + df.format(path.distanceFromSpline(parametrics.get(cur_pos_index), robotPoses.get(cur_pos_index), NEWTONS_STEPS) * Path.TO_INCHES) + " in", FRAME_WIDTH+30, 510);
         g.drawString("Angle: " + df.format(angle.getRadians() * 180 / Math.PI) + " °", FRAME_WIDTH+30, 540);
-        g.drawString("Endpoint: " + "(" + df.format(end.getX()*PurePursuitPath.TO_INCHES) + " in, " + df.format(end.getY()*PurePursuitPath.TO_INCHES) + " in)", FRAME_WIDTH+30, 570);
+        g.drawString("Endpoint: " + "(" + df.format(end.getX()*Path.TO_INCHES) + " in, " + df.format(end.getY()*Path.TO_INCHES) + " in)", FRAME_WIDTH+30, 570);
         double endAngle = path.getParametric().getPose(1).getAngle().getRadians();
         g.drawString("End Angle: " + df.format(endAngle * 180 / Math.PI) + " °", FRAME_WIDTH+30, 600);
 
@@ -247,34 +247,34 @@ public class PurePursuitPathVisualizer {
         DecimalFormat df = new DecimalFormat();
         df.setMaximumFractionDigits(4);
 
-        rightFields[0].setText(df.format(path.getMaxAcceleration() * PurePursuitPath.TO_INCHES));
-        rightFields[1].setText(df.format(path.getMaxDeceleration() * PurePursuitPath.TO_INCHES));
-        rightFields[2].setText(df.format(path.getMaxVelocity() * PurePursuitPath.TO_INCHES));
-        rightFields[3].setText(df.format(path.getMaxAngularVelocity() * PurePursuitPath.TO_INCHES));
-        rightFields[4].setText(df.format(path.getStartVelocity() * PurePursuitPath.TO_INCHES));
-        rightFields[5].setText(df.format(path.getEndVelocity() * PurePursuitPath.TO_INCHES));
-        rightFields[6].setText(df.format(startPosition.getPosition().getX() * PurePursuitPath.TO_INCHES));
-        rightFields[7].setText(df.format(startPosition.getPosition().getY() * PurePursuitPath.TO_INCHES));
+        rightFields[0].setText(df.format(path.getMaxAcceleration() * Path.TO_INCHES));
+        rightFields[1].setText(df.format(path.getMaxDeceleration() * Path.TO_INCHES));
+        rightFields[2].setText(df.format(path.getMaxVelocity() * Path.TO_INCHES));
+        rightFields[3].setText(df.format(path.getMaxAngularVelocity() * Path.TO_INCHES));
+        rightFields[4].setText(df.format(path.getStartVelocity() * Path.TO_INCHES));
+        rightFields[5].setText(df.format(path.getEndVelocity() * Path.TO_INCHES));
+        rightFields[6].setText(df.format(startPosition.getPosition().getX() * Path.TO_INCHES));
+        rightFields[7].setText(df.format(startPosition.getPosition().getY() * Path.TO_INCHES));
         rightFields[8].setText(df.format(startPosition.getAngle().getRadians() * 180 / Math.PI));
-        rightFields[9].setText(df.format(LOOKAHEAD * PurePursuitPath.TO_INCHES));
-        rightFields[10].setText(df.format(END_THRESHOLD * PurePursuitPath.TO_INCHES));
-        rightFields[11].setText(df.format(ADJUST_THRESHOLD * PurePursuitPath.TO_INCHES));
+        rightFields[9].setText(df.format(LOOKAHEAD * Path.TO_INCHES));
+        rightFields[10].setText(df.format(END_THRESHOLD * Path.TO_INCHES));
+        rightFields[11].setText(df.format(ADJUST_THRESHOLD * Path.TO_INCHES));
         rightFields[12].setText(df.format(NEWTONS_STEPS));
 
-        leftFields[0].setText(df.format(path.getParametric().getPoint(0).getX() * PurePursuitPath.TO_INCHES));
-        leftFields[1].setText(df.format(path.getParametric().getPoint(0).getY() * PurePursuitPath.TO_INCHES));
+        leftFields[0].setText(df.format(path.getParametric().getPoint(0).getX() * Path.TO_INCHES));
+        leftFields[1].setText(df.format(path.getParametric().getPoint(0).getY() * Path.TO_INCHES));
         leftFields[2].setText(df.format(path.getParametric().getAngle(0).getRadians() * 180 / Math.PI));
-        leftFields[3].setText(df.format(path.getParametric().getPoint(1).getX() * PurePursuitPath.TO_INCHES));
-        leftFields[4].setText(df.format(path.getParametric().getPoint(1).getY() * PurePursuitPath.TO_INCHES));
+        leftFields[3].setText(df.format(path.getParametric().getPoint(1).getX() * Path.TO_INCHES));
+        leftFields[4].setText(df.format(path.getParametric().getPoint(1).getY() * Path.TO_INCHES));
         leftFields[5].setText(df.format(path.getParametric().getAngle(1).getRadians() * 180 / Math.PI));
-        leftFields[6].setText(df.format(path.getParametric().getDerivative(0, 1).getX() * PurePursuitPath.TO_INCHES));
-        leftFields[7].setText(df.format(path.getParametric().getDerivative(0, 1).getY() * PurePursuitPath.TO_INCHES));
-        leftFields[8].setText(df.format(path.getParametric().getDerivative(1, 1).getX() * PurePursuitPath.TO_INCHES));
-        leftFields[9].setText(df.format(path.getParametric().getDerivative(1, 1).getY() * PurePursuitPath.TO_INCHES));
-        leftFields[10].setText(df.format(path.getParametric().getDerivative(0, 2).getX() * PurePursuitPath.TO_INCHES));
-        leftFields[11].setText(df.format(path.getParametric().getDerivative(0, 2).getY() * PurePursuitPath.TO_INCHES));
-        leftFields[12].setText(df.format(path.getParametric().getDerivative(1, 2).getX() * PurePursuitPath.TO_INCHES));
-        leftFields[13].setText(df.format(path.getParametric().getDerivative(1, 2).getY() * PurePursuitPath.TO_INCHES));
+        leftFields[6].setText(df.format(path.getParametric().getDerivative(0, 1).getX() * Path.TO_INCHES));
+        leftFields[7].setText(df.format(path.getParametric().getDerivative(0, 1).getY() * Path.TO_INCHES));
+        leftFields[8].setText(df.format(path.getParametric().getDerivative(1, 1).getX() * Path.TO_INCHES));
+        leftFields[9].setText(df.format(path.getParametric().getDerivative(1, 1).getY() * Path.TO_INCHES));
+        leftFields[10].setText(df.format(path.getParametric().getDerivative(0, 2).getX() * Path.TO_INCHES));
+        leftFields[11].setText(df.format(path.getParametric().getDerivative(0, 2).getY() * Path.TO_INCHES));
+        leftFields[12].setText(df.format(path.getParametric().getDerivative(1, 2).getX() * Path.TO_INCHES));
+        leftFields[13].setText(df.format(path.getParametric().getDerivative(1, 2).getY() * Path.TO_INCHES));
 
     }
 

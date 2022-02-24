@@ -183,4 +183,76 @@ public class QuinticHermiteSpline extends Parametric {
      */
     public Vector2D getAcceleration1() {return acceleration1;}
 
+    /**
+     * Returns the starting {@link Pose2D}
+     * @return the starting {@link Pose2D}
+     */
+    public Pose2D getPose0() {return pose0;}
+
+    /**
+     * Returns the starting velocity as a {@link Vector2D}
+     * @return the starting velocity as a {@link Vector2D}
+     */
+    public Vector2D getVelocity0() {return velocity0;}
+
+    /**
+     * Returns the starting acceleration as a {@link Vector2D}
+     * @return the starting acceleration as a {@link Vector2D}
+     */
+    public Vector2D getAcceleration0() {return acceleration0;}
+
+    /**
+     * Sets the starting pose to the {@link Pose2D} parameter
+     * @param pose new starting {@link Pose2D}
+     */
+    public void setPose0(Pose2D pose) {
+        this.pose0 = pose;
+        this.length = getGaussianQuadratureLength(17);
+    }
+
+    /**
+     * Sets the starting velocity to the {@link Vector2D} parameter
+     * @param velocity new starting {@link Vector2D} velocity
+     */
+    public void setVelocity0(Vector2D velocity) {
+        this.velocity0 = velocity;
+        this.length = getGaussianQuadratureLength(17);
+    }
+
+    /**
+     * Sets the starting acceleration to the {@link Vector2D} parameter
+     * @param acceleration new starting {@link Vector2D} acceleration
+     */
+    public void setAcceleration0(Vector2D acceleration) {
+        this.acceleration0 = acceleration;
+        this.length = getGaussianQuadratureLength(17);
+    }
+
+    /**
+     * Sets the ending pose to the {@link Pose2D} parameter
+     * @param pose new ending {@link Pose2D}
+     */
+    public void setPose1(Pose2D pose) {
+        this.pose1 = pose;
+        this.length = getGaussianQuadratureLength(17);
+    }
+
+    /**
+     * Sets the ending velocity to the {@link Vector2D} parameter
+     * @param velocity new ending {@link Vector2D} velocity
+     */
+    public void setVelocity1(Vector2D velocity) {
+        this.velocity1 = velocity;
+        this.length = getGaussianQuadratureLength(17);
+    }
+
+    /**
+     * Sets the ending acceleration to the {@link Vector2D} parameter
+     * @param acceleration new ending {@link Vector2D} acceleration
+     */
+    public void setAcceleration1(Vector2D acceleration) {
+        this.acceleration1 = acceleration;
+        this.length = getGaussianQuadratureLength(17);
+    }
+
 }

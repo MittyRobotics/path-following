@@ -1,8 +1,8 @@
 package com.github.mittyrobotics.pathfollowing;
 
-public class RamsetePath extends PurePursuitPath { //I know they should both extend Path but I'm lazy
+public class RamsetePath extends Path {
     /**
-     * Desired pose (everything else is same as Pure Pursuit)
+     * Desired pose
      */
     protected Pose2D desiredPose;
 
@@ -29,7 +29,7 @@ public class RamsetePath extends PurePursuitPath { //I know they should both ext
      * @param endVelocity desired ending of motion profile
      */
     public RamsetePath(Parametric parametric, double maxAcceleration, double maxVelocity, double startVelocity, double endVelocity) {
-        this(parametric, maxAcceleration, maxAcceleration, maxVelocity, Double.POSITIVE_INFINITY, startVelocity, endVelocity);
+        super(parametric, maxAcceleration, maxVelocity, startVelocity, endVelocity);
     }
 
     /**
@@ -39,7 +39,7 @@ public class RamsetePath extends PurePursuitPath { //I know they should both ext
      * @param maxVelocity max velocity of motion profile
      */
     public RamsetePath(Parametric parametric, double maxAcceleration, double maxVelocity) {
-        this(parametric, maxAcceleration, maxVelocity, 0, 0);
+        super(parametric, maxAcceleration, maxVelocity);
     }
 
     /**
@@ -118,14 +118,5 @@ public class RamsetePath extends PurePursuitPath { //I know they should both ext
         //generate a differential drive state with ramsete
         return RamseteController.ramsete(robotPose, desiredPose, velocity, velocity * getCurvature(closestPointT), b, Z, trackwidth);
 
-    }
-
-    /**
-     * Returns the radius of the tangent circle to the path at a t parameter
-     * @param t t parameter to get radius of
-     * @return the radius of the tangent circle to the path at a t parameter
-     */
-    public double getRadius(double t) {
-        return 1/getCurvature(t);
     }
 }
