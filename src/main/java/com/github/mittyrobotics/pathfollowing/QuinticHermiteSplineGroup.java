@@ -147,6 +147,13 @@ public class QuinticHermiteSplineGroup extends Parametric {
         return splines.get(index).getDerivative(getSplineTFromT(t, index), n);
     }
 
+    /**
+     * Returns the closest associated t value on the spline from a {@link Point2D} using Newton's method on the distance function
+     * @param point the {@link Point2D} that to get closest point from
+     * @param steps the number of steps to start Newton's method from
+     * @param iterations the number of iterations to run Newton's method on a single step
+     * @return the closest associated t value on the spline from a {@link Point2D} using Newton's method on the distance function
+     */
     @Override
     public double findClosestPointOnSpline(Point2D point, int steps, int iterations) {
         Vector2D cur_min = new Vector2D(Double.POSITIVE_INFINITY, 0);
@@ -186,6 +193,11 @@ public class QuinticHermiteSplineGroup extends Parametric {
         return length;
     }
 
+    /**
+     * Returns the t parameter associated with a certain length from the beginning
+     * @param length length to get the t parameter of
+     * @return the t parameter associated with a certain length from the beginning
+     */
     @Override
     public double getTFromLength(double length) {
         double t = 0;
@@ -202,11 +214,30 @@ public class QuinticHermiteSplineGroup extends Parametric {
         return t;
     }
 
+    /**
+     * Returns the index of the spline closest to a {@link Point2D}
+     * @param point {@link Point2D} to get closest spline to
+     * @param newtonsSteps the number of steps to start Newton's method from
+     * @return the index of the spline closest to a {@link Point2D}
+     */
     public int getIndexOfSplineFromPoint(Point2D point, int newtonsSteps) {
         return getSplineFromT(findClosestPointOnSpline(point, newtonsSteps, 5));
     }
 
-    public double getIndexOfSplineFromPointI(Point2D point, int newtonsSteps) {
-        return findClosestPointOnSpline(point, newtonsSteps, 5);
+    /**
+     * Return a new {@link QuinticHermiteSplineGroup} path to this spline group's setpoint from a position, velocity, and acceleration
+     * @param newPos {@link Pose2D} to start from
+     * @param newVel {@link Vector2D} velocity to start from
+     * @param newAcc {@link Vector2D} acceleration to start from
+     * @return a new {@link QuinticHermiteSplineGroup} path to this spline group's setpoint from a position, velocity, and acceleration
+     */
+    @Override
+    public QuinticHermiteSplineGroup getNewPath(Pose2D newPos, Vector2D newVel, Vector2D newAcc) {
+        int index = getIndexOfSplineFromPoint(newPos.getPosition(), 100);
+        QuinticHermiteSplineGroup group = new QuinticHermiteSplineGroup(new QuinticHermiteSpline(newPos, splines.get(index).getPose1()));
+        for(int i = index + 1; i < splines.size(); i++) {
+            group.addSpline(splines.get(i));
+        }
+        return group;
     }
 }

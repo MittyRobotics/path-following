@@ -255,4 +255,17 @@ public class QuinticHermiteSpline extends Parametric {
         this.length = getGaussianQuadratureLength(17);
     }
 
+    /**
+     * Return a new {@link QuinticHermiteSpline} path to this spline's setpoint from a position, velocity, and acceleration
+     * @param newPos {@link Pose2D} to start from
+     * @param newVel {@link Vector2D} velocity to start from
+     * @param newAcc {@link Vector2D} acceleration to start from
+     * @return a new {@link QuinticHermiteSpline} path to this spline's setpoint from a position, velocity, and acceleration
+     */
+    @Override
+    public QuinticHermiteSpline getNewPath(Pose2D newPos, Vector2D newVel, Vector2D newAcc) {
+        //for quintic hermite splines
+        return new QuinticHermiteSpline(newPos, pose1, newVel, velocity1, newAcc, acceleration1);
+    }
+
 }

@@ -543,17 +543,12 @@ public class Parametric {
 
     /**
      * Return a new {@link Parametric} path to this parametric's setpoint from a position, velocity, and acceleration
-     * @param newPos {@Pose2D} to start from
-     * @param newVel {@Vector2D} velocity to start from
-     * @param newAcc {@Vector2D} acceleration to start from
+     * @param newPos {@link Pose2D} to start from
+     * @param newVel {@link Vector2D} velocity to start from
+     * @param newAcc {@link Vector2D} acceleration to start from
      * @return a new {@link Parametric} path to this parametric's setpoint from a position, velocity, and acceleration
      */
     public Parametric getNewPath(Pose2D newPos, Vector2D newVel, Vector2D newAcc) {
-        if(this instanceof QuinticHermiteSpline) {
-            //for quintic hermite splines
-            return new QuinticHermiteSpline(newPos, ((QuinticHermiteSpline) this).getPose1(), newVel,
-                    ((QuinticHermiteSpline) this).getVelocity1(), newAcc, ((QuinticHermiteSpline) this).getAcceleration1());
-        }
         return new Parametric();
     }
 
