@@ -240,4 +240,14 @@ public class QuinticHermiteSplineGroup extends Parametric {
         }
         return group;
     }
+
+    /**
+     * Updates the total spline length when one {@link QuinticHermiteSpline} is edited
+     * @param index index of edited {@link QuinticHermiteSpline}
+     * @param prevLength previous length of edited {@link QuinticHermiteSpline}
+     */
+    public void updateSplineLength(int index, double prevLength) {
+        length -= prevLength;
+        length += splines.get(index).getLength();
+    }
 }
