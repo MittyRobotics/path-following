@@ -250,4 +250,14 @@ public class QuinticHermiteSplineGroup extends Parametric {
         length -= prevLength;
         length += splines.get(index).getLength();
     }
+
+    /**
+     * Updates the total spline length
+     */
+    public void updateSplineLength() {
+        length = 0;
+        for(QuinticHermiteSpline spline : splines) {
+            length += spline.getLength();
+        }
+    }
 }
