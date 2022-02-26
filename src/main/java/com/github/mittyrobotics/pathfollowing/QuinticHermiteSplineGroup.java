@@ -162,16 +162,29 @@ public class QuinticHermiteSplineGroup extends Parametric {
 
     }
 
-//    /**
-//     * Returns the Gaussian quadrature length of the parametric from a start to end t parameter
-//     * @param start t parameter to start length calculation
-//     * @param end t parameter to end length calculation
-//     * @param steps number of steps (degree) of quadrature
-//     * @return the Gaussian quadrature length of the parametric from a start to end t parameter
-//     */
-//    public double getGaussianQuadratureLength(double start, double end, int steps) {
-//
-//    }
+    /**
+     * Returns the Gaussian quadrature length of the parametric from a start to end t parameter
+     * @param start t parameter to start length calculation
+     * @param end t parameter to end length calculation
+     * @param steps number of steps (degree) of quadrature
+     * @return the Gaussian quadrature length of the parametric from a start to end t parameter
+     */
+    public double getGaussianQuadratureLength(double start, double end, int steps) {
+        double length = 0;
+        int startSpline = getSplineFromT(start);
+        int endSpline = getSplineFromT(end);
+        if(startSpline == endSpline) {
+            length += splines.get(startSpline).getGaussianQuadratureLength(getSplineTFromT(start, startSpline),
+                    getSplineTFromT(end, endSpline), steps);
+        } else {
+            length += splines.get(startSpline).getGaussianQuadratureLength(getSplineTFromT(start, startSpline), 1, steps);
+            length += splines.get(endSpline).getGaussianQuadratureLength(0, getSplineTFromT(end, endSpline), steps);
+        }
+        for (int i = startSpline + 1; i < endSpline; i++) {
+            length += splines.get(i).getLength();
+        }
+        return length;
+    }
 
     @Override
     public double getTFromLength(double length) {
