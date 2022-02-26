@@ -452,7 +452,7 @@ public class Parametric {
             //if distance is less than previous min, update distance and t
             double cur_d = getDistanceAtT(cur_t, point);
 
-            if(cur_d < cur_min.getX()) {
+            if(cur_d < cur_min.getX() && cur_t >= 0 && cur_t <= 1) {
                 cur_min = new Vector2D(cur_d, cur_t);
             }
         }
@@ -514,7 +514,7 @@ public class Parametric {
 
             //Newton's method: length remaining length divided by derivative
             if(derivativeMagnitude > 0.0) {
-                t -= (getGaussianQuadratureLength(t, 11) - length) / derivativeMagnitude;
+                t -= (getGaussianQuadratureLength(t, 17) - length) / derivativeMagnitude;
                 //Clamp to [0, 1]
                 t = Math.min(1, Math.max(t, 0));
             }

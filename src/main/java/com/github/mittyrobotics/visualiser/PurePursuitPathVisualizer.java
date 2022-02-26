@@ -36,6 +36,7 @@ public class PurePursuitPathVisualizer {
     private final ArrayList<Double> curvatures = new ArrayList<>();
     private final ArrayList<Double> linearVelocities = new ArrayList<>();
     private final ArrayList<Parametric> parametrics = new ArrayList<>();
+    private final ArrayList<Point2D> closests = new ArrayList<>();
 
     private int cur_pos_index = 0;
     private JFrame frame, adjustFrame;
@@ -165,7 +166,9 @@ public class PurePursuitPathVisualizer {
 
         g.setStroke(new BasicStroke(3));
 
-        g.fillOval(convertXToPixels(pos.getX())-5, convertYToPixels(pos.getY())-5, 10, 10);
+//        g.fillOval(convertXToPixels(pos.getX())-5, convertYToPixels(pos.getY())-5, 10, 10);
+        g.fillOval(convertXToPixels(closests.get(cur_pos_index).x)-5, convertYToPixels(closests.get(cur_pos_index).y)-5, 10, 10);
+
 
         for(int i = 0; i < cur_pos_index; i++) {
             Pose2D pose1 = robotPoses.get(i);
@@ -692,6 +695,7 @@ public class PurePursuitPathVisualizer {
         angularVelocities.add(path.getAngularVelocityAtPoint(0, path.getStartVelocity()));
         linearVelocities.add(path.getStartVelocity());
         parametrics.add(path.getParametric());
+        closests.add(path.getParametric().getPoint(0));
 
         //http://rossum.sourceforge.net/papers/DiffSteer/
 
@@ -729,6 +733,7 @@ public class PurePursuitPathVisualizer {
             angularVelocities.add(dds.getAngularVelocity());
             linearVelocities.add(dds.getLinearVelocity());
             parametrics.add(path.getParametric());
+            closests.add(path.getParametric().getPoint(path.getParametric().findClosestPointOnSpline(robotPosition.getPosition(), NEWTONS_STEPS, 5)));
 
             if(path.isFinished(robotPosition, END_THRESHOLD)) {
                 break;
