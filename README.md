@@ -1,6 +1,6 @@
 # path-following
 
-## Library: https://jitpack.io/#MittyRobotics/path-following/1.1.0
+## Library: https://jitpack.io/#MittyRobotics/path-following/1.3.1
 
 * Quintic hermite splines
 * Controllable trapezoidal motion profile with limited angular velocity
