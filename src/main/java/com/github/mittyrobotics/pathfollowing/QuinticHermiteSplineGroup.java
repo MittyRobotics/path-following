@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class QuinticHermiteSplineGroup extends Parametric {
 
     //list of splines
-    ArrayList<QuinticHermiteSpline> splines = new ArrayList<>();
+    private ArrayList<QuinticHermiteSpline> splines = new ArrayList<>();
 
     /**
      * Creates a new spline group with an initial {@link QuinticHermiteSpline}
@@ -14,6 +14,17 @@ public class QuinticHermiteSplineGroup extends Parametric {
     public QuinticHermiteSplineGroup(QuinticHermiteSpline initialSpline) {
         length = initialSpline.getLength();
         splines.add(initialSpline);
+    }
+
+    /**
+     * Creates a new spline group with an initial {@link ArrayList} of {@link QuinticHermiteSpline}s
+     * @param splines initial {@link ArrayList} of {@link QuinticHermiteSpline}s
+     */
+    public QuinticHermiteSplineGroup(ArrayList<QuinticHermiteSpline> splines) {
+        this.splines = splines;
+        for(QuinticHermiteSpline spline : splines) {
+            length += spline.getLength();
+        }
     }
 
     /**
