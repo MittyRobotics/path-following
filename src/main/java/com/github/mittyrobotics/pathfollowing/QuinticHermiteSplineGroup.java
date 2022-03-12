@@ -148,6 +148,16 @@ public class QuinticHermiteSplineGroup extends Parametric {
     }
 
     /**
+     * Returns the curvature as a {@link Pose2D} at t
+     * @param t t parameter to get curvature of
+     * @return the curvature as a {@link Pose2D} at t
+     */
+    public double getCurvature(double t) {
+        int index = getSplineFromT(t);
+        return splines.get(index).getCurvature(getSplineTFromT(t, index));
+    }
+
+    /**
      * Returns the closest associated t value on the spline from a {@link Point2D} using Newton's method on the distance function
      * @param point the {@link Point2D} that to get closest point from
      * @param steps the number of steps to start Newton's method from
