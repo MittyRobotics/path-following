@@ -14,9 +14,7 @@
 
 2022 Silicon Valley Regional, Qualification 89
 
-https://user-images.githubusercontent.com/54689920/197674780-4adc9c7a-5f91-453d-b9f3-63a7b533d889.mp4
-
-
+https://user-images.githubusercontent.com/54689920/197675636-748f47cc-f964-41ee-9bd8-4404b7d4b333.mp4
 
 ### Graphical path visualiser:
 
