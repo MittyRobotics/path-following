@@ -12,9 +12,11 @@
 
 ## Path Following in Action!
 
-2022 Silicon Valley Regional, Qualification 89
+#### 2022 Silicon Valley Regional, Qualification 89
 
-https://user-images.githubusercontent.com/54689920/197675636-748f47cc-f964-41ee-9bd8-4404b7d4b333.mp4
+
+https://user-images.githubusercontent.com/54689920/197892077-2ea0e78f-7215-43ce-ba3b-28c3df8fe175.mp4
+
 
 ### Graphical path visualiser:
 
