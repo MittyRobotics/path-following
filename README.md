@@ -1,6 +1,7 @@
 # path-following
 
 ## Library: https://jitpack.io/#MittyRobotics/path-following/1.3.1
+## Technical PDF: https://andyli23.github.io/path_following.pdf
 
 ### Check out [TKO Path Sim](https://github.com/MittyRobotics/TKO-Path-Simulator) for a fully compatible path planner and 2D/3D visualizer!
 
